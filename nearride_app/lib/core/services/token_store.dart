@@ -1,0 +1,2 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+class TokenStore {const TokenStore();static const _storage=FlutterSecureStorage();Future<String?> access()=>_storage.read(key:'access_token');Future<String?> refresh()=>_storage.read(key:'refresh_token');Future<void> save(Map<String,dynamic> s)=>Future.wait([_storage.write(key:'access_token',value:s['accessToken']),_storage.write(key:'refresh_token',value:s['refreshToken'])]);Future<void> clear()=>_storage.deleteAll();}

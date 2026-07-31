@@ -1,0 +1,1796 @@
+# Antigravity Prompt — Nearby Vehicle Hire Marketplace MVP
+
+Build a realistic, mobile-first Flutter application and a separate Node.js Express REST API for a nearby vehicle hire and rental marketplace.
+
+The application is not a taxi-booking or ride-hailing system like Uber or PickMe. It does not calculate fares, assign drivers automatically, process rides, or track vehicles in real time.
+
+Its purpose is to help customers discover nearby vehicles, vehicle owners, and drivers. After finding a suitable listing, the customer contacts the provider directly and discusses pricing, pickup, destination, timing, and other conditions outside the platform.
+
+For the MVP, do not integrate Google Maps or any visual map interface.
+
+Use GPS latitude and longitude only to:
+
+* Detect the customer’s approximate current location.
+* Save a provider’s service location.
+* Calculate distance between the customer and vehicle listing.
+* Sort listings from nearest to farthest.
+* Filter listings within a selected distance radius.
+
+---
+
+# 1. Technology Stack
+
+## Flutter application
+
+Use:
+
+* Flutter
+* Dart
+* Material 3
+* Riverpod or Provider for state management
+* Dio for API requests
+* GoRouter for navigation
+* SharedPreferences or Flutter Secure Storage for tokens
+* Geolocator for GPS permission and coordinates
+* Image Picker for vehicle images
+* Cached Network Image for remote images
+* Intl for date and time formatting
+
+Use a clean feature-first architecture.
+
+## Backend API
+
+Use:
+
+* Node.js
+* Express.js
+* MariaDB
+* `mariadb` Node.js package
+* JWT authentication
+* bcrypt password hashing
+* Google OAuth token verification where configured
+* Multer for image upload
+* Sharp for image resizing and compression
+* Helmet
+* CORS
+* Express Rate Limit
+* Joi or Zod validation
+* Morgan or a custom request logger
+* dotenv
+* UUID where public-safe identifiers are needed
+
+The backend must be deployable through an Ekafy-managed Node.js server environment.
+
+---
+
+# 2. Application Working Name
+
+Use this temporary project name:
+
+**NearRide**
+
+Keep the app name configurable from one central Flutter constants file and one backend environment variable.
+
+Do not hardcode the name throughout the project.
+
+Suggested package names:
+
+```text
+Flutter:
+com.ekafy.nearride
+
+Backend:
+nearride-api
+```
+
+---
+
+# 3. MVP User Roles
+
+A single account may have one or more roles.
+
+## Customer
+
+A customer can:
+
+* Detect their current location.
+* Browse nearby vehicle listings.
+* Search and filter listings.
+* View listing information.
+* View provider information.
+* Call the provider.
+* Open WhatsApp to contact the provider.
+* Save listings as favourites.
+* Report suspicious listings.
+
+## Vehicle Owner
+
+A vehicle owner can:
+
+* Create vehicle listings.
+* Add up to two vehicle photos.
+* Enter vehicle information.
+* Enter hire or rental availability.
+* Set a service location using GPS.
+* Add a contact number and WhatsApp number.
+* Edit, pause, activate, or delete listings.
+* View simple listing statistics.
+
+## Driver
+
+A driver may create a service listing without owning a vehicle.
+
+Examples:
+
+* Driver available for customer-owned vehicles.
+* Emergency driver.
+* Long-distance driver.
+* Delivery driver.
+* Tourist driver.
+* Heavy vehicle driver.
+
+Driver listings should be handled as a provider listing type rather than requiring a separate application.
+
+## Hirer / Renter
+
+Avoid creating confusing independent authentication systems for “hirer” and “renter.”
+
+Instead, model the platform using:
+
+```text
+account roles:
+- customer
+- provider
+- admin
+```
+
+A provider listing can have one of these types:
+
+```text
+- vehicle_with_driver
+- vehicle_without_driver
+- driver_only
+```
+
+This provides the intended driver, hirer, renter, customer behaviour without creating an unnecessarily complex role system.
+
+---
+
+# 4. Main MVP User Flow
+
+## Customer flow
+
+1. Open application.
+2. View onboarding screens.
+3. Allow location permission.
+4. Application obtains latitude and longitude.
+5. Backend returns active listings ordered by distance.
+6. Customer filters results by:
+
+   * Vehicle category
+   * Listing type
+   * Maximum distance
+   * Availability
+   * Passenger capacity
+7. Customer opens a listing.
+8. Customer views:
+
+   * Vehicle photos
+   * Vehicle details
+   * Approximate distance
+   * Provider name
+   * Provider verification status
+   * Phone number
+   * WhatsApp contact
+9. Customer contacts provider directly.
+10. Customer may save or report the listing.
+
+No booking workflow is required for the MVP.
+
+## Provider flow
+
+1. Register or sign in.
+2. Select “Become a Provider.”
+3. Complete provider profile.
+4. Add a vehicle or driver service listing.
+5. Capture the service location from the phone’s GPS.
+6. Upload a maximum of two images.
+7. Submit the listing.
+8. Listing becomes:
+
+   * pending review, or
+   * active immediately, based on an environment setting.
+9. Provider can manage listings from the dashboard.
+
+---
+
+# 5. Flutter Screens
+
+Create the following screens.
+
+## Public and authentication screens
+
+```text
+SplashScreen
+OnboardingScreen
+LoginScreen
+RegisterScreen
+GoogleSignInScreen integration
+ForgotPasswordScreen
+```
+
+## Customer screens
+
+```text
+HomeScreen
+NearbyListingsScreen
+SearchScreen
+FilterBottomSheet
+ListingDetailsScreen
+ProviderProfileScreen
+FavouriteListingsScreen
+ReportListingScreen
+NotificationScreen
+AccountScreen
+SettingsScreen
+```
+
+## Provider screens
+
+```text
+ProviderWelcomeScreen
+ProviderProfileSetupScreen
+ProviderDashboardScreen
+MyListingsScreen
+CreateListingScreen
+EditListingScreen
+ListingLocationScreen
+ListingImagesScreen
+ListingPreviewScreen
+ListingStatisticsScreen
+```
+
+## Shared screens
+
+```text
+LocationPermissionScreen
+NoInternetScreen
+ErrorScreen
+AboutScreen
+PrivacyPolicyScreen
+TermsScreen
+ContactSupportScreen
+```
+
+---
+
+# 6. Home Screen Design
+
+Create a modern, friendly home screen optimized for quick emergency discovery.
+
+The home screen should contain:
+
+* Top app bar with:
+
+  * User avatar
+  * Current area text
+  * Notifications icon
+* Search field:
+
+  * “What vehicle do you need?”
+* Emergency quick-access section
+* Vehicle category horizontal list
+* Maximum distance selector
+* Nearby listings vertical list
+* “See all” button
+* Floating provider action button:
+
+  * “List a vehicle”
+* Bottom navigation:
+
+  * Home
+  * Search
+  * Saved
+  * Account
+
+Emergency quick-access categories:
+
+```text
+Three Wheeler
+Car
+Van
+Motorbike
+Lorry
+Pickup
+Ambulance Contact
+Tow Vehicle
+Driver Only
+```
+
+Do not claim that privately listed vehicles are official emergency services.
+
+For ambulance-related results, display a clear warning that the platform does not verify emergency medical capability unless the account has been manually verified.
+
+---
+
+# 7. Listing Card Design
+
+Each listing card should display:
+
+* Primary vehicle image
+* Vehicle title
+* Vehicle category
+* Listing type
+* Distance, for example:
+
+  * `2.4 km away`
+* Provider name
+* Verification badge when applicable
+* Availability status
+* Passenger or load capacity
+* Call button
+* Favourite button
+
+Do not display an estimated fare because prices are discussed directly.
+
+Example:
+
+```text
+Toyota Hiace Van
+Vehicle with driver
+2.4 km away
+Seats: 12
+Available now
+
+[Call] [WhatsApp]
+```
+
+---
+
+# 8. Create Listing Form
+
+The listing form should use multiple steps.
+
+## Step 1: Listing type
+
+```text
+Vehicle with driver
+Vehicle without driver
+Driver only
+```
+
+## Step 2: Vehicle information
+
+Only show for vehicle listings.
+
+Fields:
+
+```text
+Vehicle title
+Vehicle category
+Manufacturer
+Model
+Manufactured year
+Registration district
+Registration number
+Passenger capacity
+Load capacity
+Fuel type
+Transmission type
+Air-conditioned
+Vehicle description
+```
+
+Registration number should be stored securely and optionally partially hidden from public responses.
+
+## Step 3: Service information
+
+Fields:
+
+```text
+Available now
+Available days
+Available start time
+Available end time
+Minimum hire duration
+Service radius
+Long-distance service available
+Emergency contact availability
+Additional notes
+```
+
+Do not require providers to publish a fixed price.
+
+Optional fields:
+
+```text
+Starting price
+Price unit
+Negotiable
+```
+
+Supported price units:
+
+```text
+per_km
+per_hour
+per_day
+fixed
+negotiable
+```
+
+## Step 4: Location
+
+Use the device GPS.
+
+Display:
+
+```text
+Detected latitude
+Detected longitude
+Approximate area name if reverse geocoding is available
+Service radius
+```
+
+Allow the provider to refresh their GPS coordinates.
+
+Do not add a map.
+
+Do not show exact provider coordinates to customers through API responses.
+
+## Step 5: Images
+
+Allow a maximum of two vehicle images.
+
+Rules:
+
+* JPEG, PNG, or WebP only.
+* Maximum original upload size: 5 MB per image.
+* Resize to a maximum width of 1280 pixels.
+* Compress into WebP or optimized JPEG.
+* Remove image metadata where possible.
+* Generate a thumbnail.
+* Reject unsupported files.
+
+For driver-only listings, make images optional and allow a provider profile image instead.
+
+## Step 6: Contact details
+
+Fields:
+
+```text
+Phone number
+WhatsApp number
+Preferred contact method
+Contact hours
+```
+
+## Step 7: Preview and submit
+
+Show the final listing exactly as customers will see it.
+
+---
+
+# 9. Nearby Distance Calculation
+
+Calculate distance primarily on the backend.
+
+The Flutter app sends:
+
+```json
+{
+  "latitude": 6.9271,
+  "longitude": 79.8612,
+  "radiusKm": 25
+}
+```
+
+Use the Haversine formula in the API.
+
+Example SQL concept:
+
+```sql
+6371 * ACOS(
+    COS(RADIANS(?))
+    * COS(RADIANS(latitude))
+    * COS(RADIANS(longitude) - RADIANS(?))
+    + SIN(RADIANS(?))
+    * SIN(RADIANS(latitude))
+)
+```
+
+Return the calculated value as:
+
+```json
+{
+  "distanceKm": 2.45
+}
+```
+
+Round display values in Flutter:
+
+```text
+Less than 1 km:
+850 m away
+
+1 km or more:
+2.5 km away
+```
+
+Default nearby search radius:
+
+```text
+25 km
+```
+
+Selectable radius values:
+
+```text
+5 km
+10 km
+25 km
+50 km
+100 km
+Any distance
+```
+
+Before running the expensive distance calculation, use a latitude and longitude bounding box to reduce candidate rows.
+
+Create indexes on:
+
+```text
+latitude
+longitude
+status
+vehicle_category_id
+listing_type
+available_now
+created_at
+```
+
+For a later version, spatial indexes may be introduced, but do not make them a requirement for the MVP.
+
+---
+
+# 10. MariaDB Database Design
+
+Use InnoDB, UTF8MB4, foreign keys, timestamps, and soft deletion where appropriate.
+
+## users
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+public_id CHAR(36) UNIQUE NOT NULL
+email VARCHAR(190) UNIQUE NULL
+password_hash VARCHAR(255) NULL
+google_id VARCHAR(190) UNIQUE NULL
+full_name VARCHAR(120) NOT NULL
+avatar_url VARCHAR(500) NULL
+phone VARCHAR(30) NULL
+whatsapp_number VARCHAR(30) NULL
+is_customer BOOLEAN DEFAULT TRUE
+is_provider BOOLEAN DEFAULT FALSE
+is_admin BOOLEAN DEFAULT FALSE
+is_phone_verified BOOLEAN DEFAULT FALSE
+is_email_verified BOOLEAN DEFAULT FALSE
+account_status ENUM('active','suspended','deleted') DEFAULT 'active'
+last_login_at DATETIME NULL
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+deleted_at DATETIME NULL
+```
+
+## provider_profiles
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+user_id BIGINT UNSIGNED UNIQUE NOT NULL
+display_name VARCHAR(120) NOT NULL
+provider_type ENUM('vehicle_owner','driver','both') NOT NULL
+description TEXT NULL
+identity_verification_status ENUM(
+    'not_submitted',
+    'pending',
+    'verified',
+    'rejected'
+) DEFAULT 'not_submitted'
+average_rating DECIMAL(3,2) DEFAULT 0
+total_ratings INT UNSIGNED DEFAULT 0
+completed_profile BOOLEAN DEFAULT FALSE
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+```
+
+Do not expose sensitive identity documents publicly.
+
+Identity-document uploads are outside the first MVP unless specifically implemented in a protected admin workflow.
+
+## vehicle_categories
+
+```sql
+id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+name VARCHAR(80) NOT NULL
+slug VARCHAR(80) UNIQUE NOT NULL
+icon_name VARCHAR(80) NULL
+is_active BOOLEAN DEFAULT TRUE
+sort_order INT DEFAULT 0
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+```
+
+Initial categories:
+
+```text
+Motorbike
+Three Wheeler
+Car
+SUV
+Van
+Bus
+Pickup
+Lorry
+Tow Vehicle
+Tractor
+Other
+```
+
+## listings
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+public_id CHAR(36) UNIQUE NOT NULL
+provider_id BIGINT UNSIGNED NOT NULL
+category_id INT UNSIGNED NULL
+listing_type ENUM(
+    'vehicle_with_driver',
+    'vehicle_without_driver',
+    'driver_only'
+) NOT NULL
+title VARCHAR(160) NOT NULL
+description TEXT NULL
+manufacturer VARCHAR(100) NULL
+model VARCHAR(100) NULL
+manufactured_year SMALLINT NULL
+registration_number_encrypted TEXT NULL
+registration_number_masked VARCHAR(30) NULL
+passenger_capacity SMALLINT UNSIGNED NULL
+load_capacity_kg DECIMAL(10,2) NULL
+fuel_type VARCHAR(40) NULL
+transmission_type VARCHAR(40) NULL
+has_air_conditioning BOOLEAN DEFAULT FALSE
+available_now BOOLEAN DEFAULT FALSE
+long_distance_available BOOLEAN DEFAULT FALSE
+emergency_contact_available BOOLEAN DEFAULT FALSE
+minimum_hire_hours DECIMAL(6,2) NULL
+starting_price DECIMAL(12,2) NULL
+price_unit ENUM(
+    'per_km',
+    'per_hour',
+    'per_day',
+    'fixed',
+    'negotiable'
+) DEFAULT 'negotiable'
+price_negotiable BOOLEAN DEFAULT TRUE
+latitude DECIMAL(10,7) NOT NULL
+longitude DECIMAL(10,7) NOT NULL
+public_area_name VARCHAR(160) NULL
+service_radius_km SMALLINT UNSIGNED DEFAULT 25
+phone VARCHAR(30) NOT NULL
+whatsapp_number VARCHAR(30) NULL
+preferred_contact_method ENUM(
+    'phone',
+    'whatsapp',
+    'both'
+) DEFAULT 'both'
+status ENUM(
+    'draft',
+    'pending',
+    'active',
+    'paused',
+    'rejected',
+    'expired',
+    'deleted'
+) DEFAULT 'draft'
+moderation_note VARCHAR(500) NULL
+view_count INT UNSIGNED DEFAULT 0
+contact_click_count INT UNSIGNED DEFAULT 0
+expires_at DATETIME NULL
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+deleted_at DATETIME NULL
+```
+
+## listing_images
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+listing_id BIGINT UNSIGNED NOT NULL
+image_url VARCHAR(500) NOT NULL
+thumbnail_url VARCHAR(500) NOT NULL
+sort_order TINYINT UNSIGNED DEFAULT 0
+created_at DATETIME NOT NULL
+```
+
+Enforce a maximum of two images in the backend service layer.
+
+Do not rely only on Flutter validation.
+
+## listing_availability
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+listing_id BIGINT UNSIGNED NOT NULL
+day_of_week TINYINT UNSIGNED NOT NULL
+start_time TIME NULL
+end_time TIME NULL
+is_available BOOLEAN DEFAULT TRUE
+```
+
+Use:
+
+```text
+0 = Sunday
+1 = Monday
+...
+6 = Saturday
+```
+
+## favourites
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+user_id BIGINT UNSIGNED NOT NULL
+listing_id BIGINT UNSIGNED NOT NULL
+created_at DATETIME NOT NULL
+UNIQUE KEY unique_favourite (user_id, listing_id)
+```
+
+## listing_reports
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+listing_id BIGINT UNSIGNED NOT NULL
+reporter_user_id BIGINT UNSIGNED NOT NULL
+reason ENUM(
+    'incorrect_information',
+    'fraud',
+    'unsafe_vehicle',
+    'offensive_content',
+    'duplicate',
+    'unavailable',
+    'other'
+) NOT NULL
+description VARCHAR(1000) NULL
+status ENUM('pending','reviewed','resolved','dismissed') DEFAULT 'pending'
+created_at DATETIME NOT NULL
+updated_at DATETIME NOT NULL
+```
+
+## listing_events
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+listing_id BIGINT UNSIGNED NOT NULL
+user_id BIGINT UNSIGNED NULL
+event_type ENUM(
+    'view',
+    'phone_click',
+    'whatsapp_click',
+    'favourite'
+) NOT NULL
+created_at DATETIME NOT NULL
+```
+
+Do not store raw GPS history in this table.
+
+## refresh_tokens
+
+```sql
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+user_id BIGINT UNSIGNED NOT NULL
+token_hash VARCHAR(255) NOT NULL
+device_name VARCHAR(160) NULL
+expires_at DATETIME NOT NULL
+revoked_at DATETIME NULL
+created_at DATETIME NOT NULL
+```
+
+---
+
+# 11. REST API Endpoints
+
+Use API prefix:
+
+```text
+/api/v1
+```
+
+## Authentication
+
+```http
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/google
+POST   /api/v1/auth/refresh
+POST   /api/v1/auth/logout
+GET    /api/v1/auth/me
+PATCH  /api/v1/auth/profile
+```
+
+## Vehicle categories
+
+```http
+GET    /api/v1/categories
+```
+
+## Public listings
+
+```http
+GET    /api/v1/listings/nearby
+GET    /api/v1/listings/search
+GET    /api/v1/listings/:publicId
+GET    /api/v1/providers/:publicId
+```
+
+Nearby query example:
+
+```http
+GET /api/v1/listings/nearby
+    ?latitude=6.9271
+    &longitude=79.8612
+    &radiusKm=25
+    &category=van
+    &listingType=vehicle_with_driver
+    &availableNow=true
+    &page=1
+    &limit=20
+```
+
+Search filters:
+
+```text
+query
+latitude
+longitude
+radiusKm
+categoryId
+listingType
+availableNow
+longDistanceAvailable
+minimumPassengerCapacity
+hasAirConditioning
+sort
+page
+limit
+```
+
+Supported sort values:
+
+```text
+nearest
+newest
+most_viewed
+```
+
+## Provider profile
+
+```http
+POST   /api/v1/provider/profile
+GET    /api/v1/provider/profile
+PATCH  /api/v1/provider/profile
+```
+
+## Provider listings
+
+```http
+POST   /api/v1/provider/listings
+GET    /api/v1/provider/listings
+GET    /api/v1/provider/listings/:publicId
+PATCH  /api/v1/provider/listings/:publicId
+DELETE /api/v1/provider/listings/:publicId
+PATCH  /api/v1/provider/listings/:publicId/status
+POST   /api/v1/provider/listings/:publicId/images
+DELETE /api/v1/provider/listings/:publicId/images/:imageId
+GET    /api/v1/provider/listings/:publicId/statistics
+```
+
+Status update body:
+
+```json
+{
+  "status": "paused"
+}
+```
+
+Providers may only manage their own listings.
+
+## Favourites
+
+```http
+GET    /api/v1/favourites
+POST   /api/v1/favourites/:listingPublicId
+DELETE /api/v1/favourites/:listingPublicId
+```
+
+## Reports
+
+```http
+POST   /api/v1/listings/:publicId/reports
+```
+
+## Listing events
+
+```http
+POST   /api/v1/listings/:publicId/events
+```
+
+Example:
+
+```json
+{
+  "eventType": "whatsapp_click"
+}
+```
+
+## Admin MVP endpoints
+
+```http
+GET    /api/v1/admin/listings
+GET    /api/v1/admin/listings/:publicId
+PATCH  /api/v1/admin/listings/:publicId/moderation
+GET    /api/v1/admin/reports
+PATCH  /api/v1/admin/reports/:reportId
+PATCH  /api/v1/admin/users/:publicId/status
+```
+
+A separate web admin interface is optional. The API must still contain protected admin endpoints.
+
+---
+
+# 12. API Response Format
+
+Use a consistent format.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "message": "Nearby listings loaded successfully.",
+  "data": [],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 42,
+    "totalPages": 3
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed.",
+  "errors": [
+    {
+      "field": "latitude",
+      "message": "Latitude is required."
+    }
+  ],
+  "code": "VALIDATION_ERROR"
+}
+```
+
+Never return:
+
+* Password hashes
+* Refresh tokens
+* Google tokens
+* Exact identity data
+* Internal database credentials
+* Raw SQL errors
+* Full registration numbers
+* Exact provider coordinates in public listing responses
+
+---
+
+# 13. Separate Backend Project Structure
+
+Generate the backend as a standalone project.
+
+```text
+nearride-api/
+├── src/
+│   ├── app.js
+│   ├── server.js
+│   │
+│   ├── config/
+│   │   ├── database.js
+│   │   ├── env.js
+│   │   ├── logger.js
+│   │   └── upload.js
+│   │
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── categoryController.js
+│   │   ├── listingController.js
+│   │   ├── providerController.js
+│   │   ├── favouriteController.js
+│   │   ├── reportController.js
+│   │   ├── eventController.js
+│   │   └── adminController.js
+│   │
+│   ├── services/
+│   │   ├── authService.js
+│   │   ├── tokenService.js
+│   │   ├── listingService.js
+│   │   ├── distanceService.js
+│   │   ├── providerService.js
+│   │   ├── imageService.js
+│   │   ├── favouriteService.js
+│   │   ├── reportService.js
+│   │   └── moderationService.js
+│   │
+│   ├── repositories/
+│   │   ├── userRepository.js
+│   │   ├── categoryRepository.js
+│   │   ├── listingRepository.js
+│   │   ├── providerRepository.js
+│   │   ├── favouriteRepository.js
+│   │   ├── reportRepository.js
+│   │   └── tokenRepository.js
+│   │
+│   ├── routes/
+│   │   ├── index.js
+│   │   ├── authRoutes.js
+│   │   ├── listingRoutes.js
+│   │   ├── providerRoutes.js
+│   │   ├── categoryRoutes.js
+│   │   ├── favouriteRoutes.js
+│   │   ├── reportRoutes.js
+│   │   └── adminRoutes.js
+│   │
+│   ├── middleware/
+│   │   ├── authenticate.js
+│   │   ├── authorize.js
+│   │   ├── validate.js
+│   │   ├── uploadLimiter.js
+│   │   ├── rateLimiter.js
+│   │   ├── errorHandler.js
+│   │   ├── notFoundHandler.js
+│   │   └── requestId.js
+│   │
+│   ├── validators/
+│   │   ├── authValidators.js
+│   │   ├── listingValidators.js
+│   │   ├── providerValidators.js
+│   │   └── reportValidators.js
+│   │
+│   ├── utils/
+│   │   ├── ApiError.js
+│   │   ├── ApiResponse.js
+│   │   ├── asyncHandler.js
+│   │   ├── pagination.js
+│   │   ├── geo.js
+│   │   ├── phone.js
+│   │   └── encryption.js
+│   │
+│   └── constants/
+│       ├── listingStatus.js
+│       ├── listingTypes.js
+│       └── roles.js
+│
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│   └── schema.sql
+│
+├── storage/
+│   ├── listings/
+│   └── thumbnails/
+│
+├── tests/
+│   ├── unit/
+│   └── integration/
+│
+├── public/
+│   └── uploads/
+│
+├── .env.example
+├── .gitignore
+├── package.json
+├── README.md
+└── ecosystem.config.js
+```
+
+Controllers must remain thin.
+
+Business logic belongs in services.
+
+Database queries belong in repositories.
+
+Do not place all backend logic in one file.
+
+Use connection pooling and parameterized queries.
+
+---
+
+# 14. Backend Environment Variables
+
+Create `.env.example`:
+
+```env
+NODE_ENV=development
+PORT=3000
+APP_NAME=NearRide
+APP_URL=http://localhost:3000
+API_BASE_URL=http://localhost:3000/api/v1
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=nearride
+DB_USER=nearride_user
+DB_PASSWORD=change_this
+DB_CONNECTION_LIMIT=10
+
+JWT_ACCESS_SECRET=replace_with_long_random_secret
+JWT_REFRESH_SECRET=replace_with_another_long_random_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=30d
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+UPLOAD_DIRECTORY=public/uploads
+MAX_IMAGES_PER_LISTING=2
+MAX_IMAGE_SIZE_MB=5
+
+AUTO_APPROVE_LISTINGS=false
+DEFAULT_LISTING_EXPIRY_DAYS=60
+DEFAULT_SEARCH_RADIUS_KM=25
+
+CORS_ORIGINS=http://localhost:3000
+REGISTRATION_ENCRYPTION_KEY=replace_with_32_byte_key
+```
+
+---
+
+# 15. Separate Flutter Project Structure
+
+Generate the Flutter client as a standalone project.
+
+```text
+nearride_app/
+├── lib/
+│   ├── main.dart
+│   ├── app.dart
+│   │
+│   ├── core/
+│   │   ├── config/
+│   │   │   ├── app_config.dart
+│   │   │   └── environment.dart
+│   │   ├── constants/
+│   │   │   ├── app_constants.dart
+│   │   │   ├── api_endpoints.dart
+│   │   │   └── storage_keys.dart
+│   │   ├── errors/
+│   │   │   ├── app_exception.dart
+│   │   │   └── failure.dart
+│   │   ├── network/
+│   │   │   ├── api_client.dart
+│   │   │   ├── auth_interceptor.dart
+│   │   │   ├── connectivity_service.dart
+│   │   │   └── token_refresh_interceptor.dart
+│   │   ├── routing/
+│   │   │   ├── app_router.dart
+│   │   │   └── route_names.dart
+│   │   ├── services/
+│   │   │   ├── location_service.dart
+│   │   │   ├── secure_storage_service.dart
+│   │   │   ├── image_picker_service.dart
+│   │   │   ├── phone_launcher_service.dart
+│   │   │   └── whatsapp_launcher_service.dart
+│   │   ├── theme/
+│   │   │   ├── app_theme.dart
+│   │   │   ├── app_colors.dart
+│   │   │   └── app_text_styles.dart
+│   │   └── widgets/
+│   │       ├── app_button.dart
+│   │       ├── app_text_field.dart
+│   │       ├── loading_view.dart
+│   │       ├── error_view.dart
+│   │       ├── empty_view.dart
+│   │       └── network_image_view.dart
+│   │
+│   ├── features/
+│   │   ├── auth/
+│   │   │   ├── data/
+│   │   │   ├── domain/
+│   │   │   └── presentation/
+│   │   ├── location/
+│   │   ├── home/
+│   │   ├── listings/
+│   │   ├── search/
+│   │   ├── favourites/
+│   │   ├── provider/
+│   │   ├── profile/
+│   │   ├── reports/
+│   │   └── settings/
+│   │
+│   └── shared/
+│       ├── models/
+│       ├── providers/
+│       └── widgets/
+│
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   └── animations/
+│
+├── test/
+├── pubspec.yaml
+├── analysis_options.yaml
+├── README.md
+└── .env.example
+```
+
+Each feature should follow:
+
+```text
+feature/
+├── data/
+│   ├── models/
+│   ├── datasources/
+│   └── repositories/
+├── domain/
+│   ├── entities/
+│   ├── repositories/
+│   └── usecases/
+└── presentation/
+    ├── providers/
+    ├── screens/
+    └── widgets/
+```
+
+Do not over-engineer simple features, but maintain this separation for authentication, listings, provider management, location, and favourites.
+
+---
+
+# 16. Core Flutter Models
+
+Create strongly typed models for:
+
+```text
+User
+AuthSession
+ProviderProfile
+VehicleCategory
+VehicleListing
+ListingImage
+ListingAvailability
+NearbyListing
+ListingFilter
+Favourite
+ListingReport
+PaginatedResponse<T>
+ApiResponse<T>
+GeoLocation
+```
+
+Example `VehicleListing` fields:
+
+```dart
+class VehicleListing {
+  final String publicId;
+  final String title;
+  final String listingType;
+  final VehicleCategory? category;
+  final String? description;
+  final String providerName;
+  final bool providerVerified;
+  final String? manufacturer;
+  final String? model;
+  final int? manufacturedYear;
+  final int? passengerCapacity;
+  final double? loadCapacityKg;
+  final bool availableNow;
+  final bool longDistanceAvailable;
+  final bool emergencyContactAvailable;
+  final String? publicAreaName;
+  final double? distanceKm;
+  final String phone;
+  final String? whatsappNumber;
+  final List<ListingImage> images;
+  final bool isFavourite;
+}
+```
+
+Use immutable models with:
+
+* `fromJson`
+* `toJson`
+* `copyWith`
+* null-safe parsing
+
+Code generation may use Freezed and JSON Serializable, but it is optional.
+
+---
+
+# 17. Location Permission Behaviour
+
+Handle these cases correctly:
+
+```text
+Permission not requested
+Permission denied
+Permission denied forever
+Location service disabled
+Location successfully obtained
+Location timeout
+Location temporarily unavailable
+```
+
+Do not block the entire application if GPS permission is denied.
+
+Provide manual fallback:
+
+```text
+Select district
+Select town
+Choose search radius
+```
+
+The manual fallback can use approximate town coordinates stored in a local JSON file or loaded from the backend.
+
+Display a privacy message:
+
+```text
+Your location is used to find nearby listings. Your continuous location history is not stored.
+```
+
+Do not implement background location tracking.
+
+---
+
+# 18. Contact Actions
+
+Use `url_launcher`.
+
+Phone:
+
+```text
+tel:+947XXXXXXXX
+```
+
+WhatsApp:
+
+```text
+https://wa.me/947XXXXXXXX
+```
+
+Pre-filled WhatsApp message:
+
+```text
+Hello, I found your vehicle listing on NearRide. Is it currently available?
+```
+
+Before opening an external application:
+
+* Record a contact-click event through the API.
+* Do not delay the user if event recording fails.
+* Validate and normalize Sri Lankan phone numbers.
+
+Support future international phone formats.
+
+---
+
+# 19. Authentication
+
+Support:
+
+* Email and password registration.
+* Email and password login.
+* Google Sign-In.
+* JWT access and refresh tokens.
+
+Access token:
+
+```text
+15 minutes
+```
+
+Refresh token:
+
+```text
+30 days
+```
+
+Store mobile tokens using Flutter Secure Storage.
+
+Use a Dio interceptor to:
+
+1. Attach the access token.
+2. Detect an unauthorized response.
+3. Attempt token refresh once.
+4. Retry the original request.
+5. Log the user out if refreshing fails.
+
+Never log access tokens or passwords.
+
+---
+
+# 20. Security Requirements
+
+Implement:
+
+* Password hashing with bcrypt.
+* Parameterized SQL queries.
+* Input validation.
+* Request body limits.
+* Image MIME verification.
+* File-extension verification.
+* Rate limiting.
+* Helmet security headers.
+* Configurable CORS.
+* JWT verification.
+* Refresh-token rotation.
+* Revocable sessions.
+* Ownership checks.
+* Admin authorization.
+* Soft deletion.
+* Error sanitization.
+* Public UUIDs instead of exposing sequential listing IDs.
+* Encryption for sensitive registration information.
+* Logging without secrets.
+* Prevention of path traversal in file upload.
+* Maximum two images enforced by API.
+* Blocking executable or SVG uploads.
+* Pagination limits.
+
+Recommended limits:
+
+```text
+Login:
+5 attempts per 15 minutes per IP/account combination
+
+Registration:
+5 attempts per hour per IP
+
+Public listing search:
+60 requests per minute per IP
+
+Image upload:
+10 requests per hour per provider
+
+Reports:
+10 reports per day per user
+```
+
+---
+
+# 21. Trust and Safety Features
+
+Add practical marketplace safety features:
+
+* Provider verification badge.
+* Listing report button.
+* Listing status and last-updated date.
+* Warning against transferring advance payments without verification.
+* Warning that NearRide is a listing marketplace, not the transport provider.
+* Hide full vehicle registration numbers.
+* Allow administrators to suspend providers.
+* Automatically expire inactive listings.
+* Allow customers to report unavailable listings.
+* Prevent a suspended provider from creating or activating listings.
+* Prevent duplicate rapid submissions.
+* Show emergency-service disclaimers.
+
+Suggested disclaimer:
+
+```text
+NearRide helps users discover independent vehicle and driver listings. NearRide does not operate the vehicles, employ the providers, set prices, or guarantee availability, safety, licensing, or service quality. Confirm all details directly with the provider before proceeding.
+```
+
+---
+
+# 22. Offline and Poor-Network Behaviour
+
+This is not a fully offline application, but handle unstable connections gracefully.
+
+Flutter should:
+
+* Cache the most recently loaded categories.
+* Cache the most recent nearby listing response temporarily.
+* Display cached results with an “Offline results” notice.
+* Preserve partially completed listing forms locally.
+* Retry failed safe GET requests.
+* Never automatically retry listing creation if duplicate submission is possible.
+* Show upload progress for images.
+* Allow cancelled uploads.
+
+Do not build full database synchronization for this MVP.
+
+---
+
+# 23. Performance Requirements
+
+Flutter:
+
+* Use paginated listing loading.
+* Avoid rebuilding full screens unnecessarily.
+* Use compressed thumbnails in listing cards.
+* Lazy-load full-size images.
+* Debounce search input.
+* Cache category results.
+* Use const widgets where possible.
+* Display skeleton loaders.
+* Avoid requesting GPS repeatedly.
+
+Backend:
+
+* Use MariaDB connection pooling.
+* Use selected columns instead of `SELECT *`.
+* Paginate every list endpoint.
+* Set maximum page size to 50.
+* Index common filters.
+* Use bounding-box filtering before Haversine calculations.
+* Generate thumbnails during upload.
+* Avoid returning exact coordinates publicly.
+* Use compression middleware.
+* Add graceful shutdown for database connections.
+
+---
+
+# 24. UI Design Direction
+
+Use a clean, trustworthy marketplace design.
+
+Style:
+
+* Modern Material 3.
+* Rounded cards.
+* Large readable typography.
+* Clear distance labels.
+* Strong primary call and WhatsApp actions.
+* Minimal visual clutter.
+* High contrast.
+* Accessible touch targets.
+* Responsive on small Android screens.
+* Light mode first.
+* Dark mode support prepared but optional for MVP.
+
+Suggested visual personality:
+
+```text
+Trustworthy
+Fast
+Local
+Helpful
+Simple
+Emergency-friendly
+```
+
+Avoid copying Uber, PickMe, or other ride-hailing interfaces.
+
+This is a searchable marketplace, not a live ride-booking interface.
+
+---
+
+# 25. Provider Dashboard
+
+Display:
+
+```text
+Active listings
+Pending listings
+Paused listings
+Expired listings
+Total listing views
+Total phone clicks
+Total WhatsApp clicks
+```
+
+Provide actions:
+
+```text
+Create listing
+Edit listing
+Preview listing
+Pause listing
+Reactivate listing
+Delete listing
+Refresh location
+Update availability
+```
+
+Do not provide revenue analytics because payments are not processed through the platform.
+
+---
+
+# 26. MVP Exclusions
+
+Do not implement these features in the first version:
+
+* Google Maps.
+* Real-time vehicle tracking.
+* Automatic driver assignment.
+* In-app ride booking.
+* Fare calculation.
+* Dynamic pricing.
+* Online payments.
+* Escrow.
+* Customer-driver chat.
+* Voice or video calling.
+* Route navigation.
+* GPS background tracking.
+* Driver bidding.
+* Multi-stop journeys.
+* Rating and review submission.
+* Full KYC automation.
+* Push notification campaigns.
+* Complex recommendation algorithms.
+* Subscription plans.
+* Advertisements.
+* Commission calculation.
+
+Prepare the architecture so some of these can be added later without rewriting the whole application.
+
+---
+
+# 27. Required Deliverables
+
+Generate both projects separately.
+
+## Deliverable A: Backend API
+
+Generate:
+
+* Complete Express application.
+* MariaDB schema.
+* Migration scripts.
+* Initial category seed data.
+* Authentication.
+* Google authentication endpoint.
+* JWT refresh-token flow.
+* Nearby-search query.
+* Listing CRUD.
+* Maximum two-image upload.
+* Image compression and thumbnails.
+* Favourites.
+* Reports.
+* Contact-click event tracking.
+* Provider statistics.
+* Admin moderation endpoints.
+* Validation.
+* Error handling.
+* Environment configuration.
+* API documentation.
+* Postman collection.
+* Basic integration tests.
+* Ekafy deployment instructions.
+
+## Deliverable B: Flutter application
+
+Generate:
+
+* Complete Flutter project.
+* App theme.
+* Routing.
+* Authentication flow.
+* Google Sign-In integration structure.
+* Secure token storage.
+* Dio interceptors.
+* Location permission handling.
+* Nearby listing screen.
+* Search and filters.
+* Listing details.
+* Call and WhatsApp actions.
+* Favourites.
+* Provider registration.
+* Listing creation wizard.
+* Maximum two-image selection.
+* Provider dashboard.
+* Listing management.
+* Error, empty, loading, and offline states.
+* Form validation.
+* Reusable widgets.
+* API configuration.
+* README setup instructions.
+
+---
+
+# 28. Development Order
+
+Build in this order.
+
+## Backend phase
+
+1. Initialize Express project.
+2. Create environment configuration.
+3. Configure MariaDB pool.
+4. Create database migrations.
+5. Create user authentication.
+6. Add refresh-token rotation.
+7. Create provider profiles.
+8. Create categories.
+9. Create listing CRUD.
+10. Add image uploads.
+11. Add nearby-distance search.
+12. Add favourites and reports.
+13. Add statistics and contact events.
+14. Add admin moderation.
+15. Add tests and documentation.
+
+## Flutter phase
+
+1. Initialize Flutter project.
+2. Create theme and routing.
+3. Configure Dio.
+4. Build authentication.
+5. Add secure token storage.
+6. Add location service.
+7. Build home and nearby-listing screens.
+8. Build listing details.
+9. Add filters and search.
+10. Add favourites.
+11. Build provider profile.
+12. Build listing creation wizard.
+13. Add image upload.
+14. Build provider dashboard.
+15. Add offline and error handling.
+16. Add tests and release configuration.
+
+---
+
+# 29. Code Quality Rules
+
+* Use meaningful class and function names.
+* Avoid massive files.
+* Avoid duplicate logic.
+* Use reusable widgets and services.
+* Add comments only where logic is not obvious.
+* Do not leave placeholder methods that silently return fake values.
+* Do not expose secrets.
+* Do not use mock data after API integration is completed.
+* Handle null values safely.
+* Validate all user input on both Flutter and backend.
+* Keep controllers thin.
+* Keep SQL inside repository files.
+* Keep business rules inside service files.
+* Return consistent API responses.
+* Add loading, success, empty, and failure states.
+* Use transactions when creating listings with availability and images.
+* Roll back database operations when a required step fails.
+* Follow REST naming conventions.
+* Use proper HTTP status codes.
+
+---
+
+# 30. Acceptance Criteria
+
+The MVP is complete when:
+
+1. A user can register and log in.
+2. A user can allow GPS access.
+3. A user can browse active nearby listings ordered by distance.
+4. A user can filter listings by category, distance, listing type, and availability.
+5. A user can open a listing and see its details.
+6. A user can call or WhatsApp a provider.
+7. A user can favourite and unfavourite listings.
+8. A user can report a listing.
+9. A user can become a provider.
+10. A provider can create a vehicle or driver-only listing.
+11. A provider can upload no more than two images.
+12. The backend compresses uploaded images.
+13. A provider can edit, pause, reactivate, and delete a listing.
+14. A provider can see views and contact-click counts.
+15. Public API responses do not reveal exact provider GPS coordinates.
+16. Nearby distance is calculated by the backend.
+17. The app works without any map integration.
+18. The backend can be deployed as a normal Node.js Express application with MariaDB.
+19. Authentication tokens are stored securely.
+20. Suspended users cannot publish or activate listings.
+
+Generate functional, connected code rather than UI-only mockups. Start with the backend database and authentication foundation, then implement the Flutter application against the real API.

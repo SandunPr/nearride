@@ -1,0 +1,1 @@
+process.env.NODE_ENV='test';const test=require('node:test'),assert=require('node:assert/strict'),request=require('supertest'),app=require('../src/app');test('health endpoint',async()=>{const r=await request(app).get('/health');assert.equal(r.status,200);assert.equal(r.body.success,true)});

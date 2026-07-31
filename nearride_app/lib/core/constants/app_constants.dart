@@ -1,0 +1,1 @@
+abstract final class AppConstants {static const name='NearRide';static const defaultRadiusKm=25.0;static const disclaimer='NearRide helps users discover independent vehicle and driver listings. NearRide does not operate the vehicles, employ providers, set prices, or guarantee availability, safety, licensing, or service quality. Confirm all details directly with the provider.';}
