@@ -1,4 +1,4 @@
-package com.ekafy.nearride_app
+package com.ekafy.nearride
 
 import io.flutter.embedding.android.FlutterActivity
 

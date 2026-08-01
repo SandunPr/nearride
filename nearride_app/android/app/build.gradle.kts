@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ekafy.nearride_app"
+    namespace = "com.ekafy.nearride"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
