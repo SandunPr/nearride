@@ -8,6 +8,20 @@ Express/MariaDB REST API for a nearby vehicle and driver listing marketplace. It
 2. Create the configured MariaDB user and grant it access. Run `npm install`, then `npm run db:migrate`.
 3. Start with `npm run dev`. Check `GET /health`.
 
+## Google authentication
+
+Set `GOOGLE_CLIENT_ID` in the API `.env` to the Google Cloud **Web OAuth
+client ID**. Build or run Flutter with the same public client ID:
+
+```sh
+flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=your-id.apps.googleusercontent.com
+```
+
+For Android, also create an Android OAuth client in Google Cloud for package
+`com.ekafy.nearride` and add the SHA-1 fingerprints for every signing key used
+(debug and release). The Web client ID remains the value passed to the API and
+Flutter `GOOGLE_SERVER_CLIENT_ID`.
+
 All endpoints use `/api/v1`. Public discovery: `GET /categories`, `GET /listings/nearby`, `GET /listings/search`, `GET /listings/:publicId`. Authentication, provider CRUD, favourites, reports and contact-event routes follow the supplied specification. Responses never include listing coordinates or full registration numbers.
 
 ## Deployment on Ekafy

@@ -37,7 +37,14 @@ class ListingCard extends StatelessWidget {
                 ]),
                 const SizedBox(height: 8),
                 Row(children: [
-                  Text(listing.providerName),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundImage: listing.providerAvatarUrl == null ? null : CachedNetworkImageProvider(listing.providerAvatarUrl!),
+                    child: listing.providerAvatarUrl == null ? Text(listing.providerName.isEmpty ? '?' : listing.providerName.characters.first.toUpperCase()) : null,
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(child: Text(listing.providerName, maxLines: 1, overflow: TextOverflow.ellipsis)),
                   if (listing.providerVerified) ...[const SizedBox(width: 4), Icon(Icons.verified, size: 17, color: Theme.of(context).colorScheme.primary)],
                 ]),
               ]),

@@ -1,3 +1,36 @@
-import 'package:flutter/material.dart';import 'package:go_router/go_router.dart';import 'core/constants/app_constants.dart';import 'core/theme/app_theme.dart';import 'features/auth/presentation/login_screen.dart';import 'features/home/presentation/home_screen.dart';import 'features/listings/presentation/listing_details_screen.dart';import 'features/provider/presentation/provider_screen.dart';
-final router=GoRouter(initialLocation:'/',routes:[GoRoute(path:'/',builder:(_,__)=>const HomeScreen()),GoRoute(path:'/login',builder:(_,__)=>const LoginScreen()),GoRoute(path:'/listing/:id',builder:(_,s)=>ListingDetailsScreen(id:s.pathParameters['id']!)),GoRoute(path:'/provider',builder:(_,__)=>const ProviderScreen())]);
-class NearRideApp extends StatelessWidget{const NearRideApp({super.key});@override Widget build(BuildContext context)=>MaterialApp.router(title:AppConstants.name,debugShowCheckedModeBanner:false,theme:AppTheme.light,routerConfig:router);}
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'core/constants/app_constants.dart';
+import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/auth/presentation/register_screen.dart';
+import 'features/home/presentation/home_screen.dart';
+import 'features/listings/presentation/listing_details_screen.dart';
+import 'features/provider/presentation/provider_screen.dart';
+import 'features/profile/presentation/profile_screen.dart';
+import 'features/search/presentation/search_screen.dart';
+
+final router = GoRouter(initialLocation: '/', routes: [
+  GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+  GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+  GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+  GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+  GoRoute(
+      path: '/listing/:id',
+      builder: (_, state) =>
+          ListingDetailsScreen(id: state.pathParameters['id']!)),
+  GoRoute(path: '/provider', builder: (_, __) => const ProviderScreen()),
+]);
+
+class NearRideApp extends StatelessWidget {
+  const NearRideApp({super.key});
+  @override
+  Widget build(BuildContext context) => MaterialApp.router(
+        title: AppConstants.name,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        routerConfig: router,
+      );
+}

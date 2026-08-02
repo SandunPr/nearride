@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/vehicle_listing.dart';
 import '../../../shared/providers/providers.dart';
@@ -45,7 +47,10 @@ class ListingDetailsScreen extends ConsumerWidget {
               ]),
               const Divider(height: 32),
               Row(children: [
-                CircleAvatar(child: Text(listing.providerName.characters.first)),
+                CircleAvatar(
+                  backgroundImage: listing.providerAvatarUrl == null ? null : CachedNetworkImageProvider(listing.providerAvatarUrl!),
+                  child: listing.providerAvatarUrl == null ? Text(listing.providerName.isEmpty ? '?' : listing.providerName.characters.first.toUpperCase()) : null,
+                ),
                 const SizedBox(width: 12),
                 Expanded(child: Text(listing.providerName, style: Theme.of(context).textTheme.titleMedium)),
                 if (listing.providerVerified) const Icon(Icons.verified, color: Colors.teal),

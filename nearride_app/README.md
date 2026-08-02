@@ -1,7 +1,5 @@
 # NearRide Flutter app
-
-Mobile client for discovering nearby independent vehicle and driver listings. It intentionally has no map, booking, fare calculation, tracking, or payment flow.
-
+cd
 ## Run
 
 1. Install Flutter 3.24+ and an Android/iOS toolchain.
