@@ -35,7 +35,6 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   final startingPrice = TextEditingController();
   String priceUnit = 'negotiable';
   bool hasAirConditioning = true;
-  bool availableNow = true;
   bool longDistanceAvailable = true;
   final area = TextEditingController();
   String? profilePhone;
@@ -263,7 +262,6 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
           'startingPrice': double.tryParse(startingPrice.text.trim()),
           'priceUnit': priceUnit,
           'hasAirConditioning': hasAirConditioning,
-          'availableNow': availableNow,
           'longDistanceAvailable': longDistanceAvailable,
           'latitude': lat!,
           'longitude': lng!,
@@ -588,12 +586,6 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        SwitchListTile(
-                          value: availableNow,
-                          onChanged: (val) =>
-                              setState(() => availableNow = val),
-                          title: const Text('Available Now'),
-                        ),
                         SwitchListTile(
                           value: hasAirConditioning,
                           onChanged: (val) =>
