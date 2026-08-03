@@ -40,7 +40,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       if (mounted) setState(() => results = items);
     } catch (_) {
       if (mounted) {
-        setState(() => error = 'Could not search NearRide. Check your connection and try again.');
+        setState(() => error =
+            'Could not search NearRide. Check your connection and try again.');
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -55,13 +56,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onDestinationSelected: (index) {
             if (index == 0) context.go('/');
             if (index == 1) return;
-            if (index == 3) context.push('/login');
+            if (index == 2) context.push('/favourites');
+            if (index == 3) context.push('/profile');
           },
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined), label: 'Home'),
             NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-            NavigationDestination(icon: Icon(Icons.favorite_outline), label: 'Saved'),
-            NavigationDestination(icon: Icon(Icons.person_outline), label: 'Account'),
+            NavigationDestination(
+                icon: Icon(Icons.favorite_outline), label: 'Saved'),
+            NavigationDestination(
+                icon: Icon(Icons.person_outline), label: 'Account'),
           ],
         ),
         body: Column(
@@ -86,11 +91,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             if (loading) const LinearProgressIndicator(),
             Expanded(
               child: error != null
-                  ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(error!)))
+                  ? Center(
+                      child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(error!)))
                   : !searched
-                      ? const Center(child: Text('Search all active NearRide listings.'))
+                      ? const Center(
+                          child: Text('Search all active NearRide listings.'))
                       : results.isEmpty
-                          ? const Center(child: Text('No matching listings found.'))
+                          ? const Center(
+                              child: Text('No matching listings found.'))
                           : ListView.builder(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                               itemCount: results.length,

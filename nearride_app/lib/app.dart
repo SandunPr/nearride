@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'features/admin/presentation/admin_listings_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
+import 'features/favourites/presentation/favourites_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/listings/presentation/listing_details_screen.dart';
 import 'features/provider/presentation/provider_screen.dart';
@@ -16,6 +17,18 @@ import 'features/search/presentation/search_screen.dart';
 final router = GoRouter(initialLocation: '/', routes: [
   GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
   GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+  GoRoute(
+    path: '/favourites',
+    redirect: (_, state) async {
+      final accessToken = await const TokenStore().access();
+      if (accessToken != null && accessToken.isNotEmpty) return null;
+      return Uri(
+        path: '/login',
+        queryParameters: {'redirect': state.matchedLocation},
+      ).toString();
+    },
+    builder: (_, __) => const FavouritesScreen(),
+  ),
   GoRoute(
     path: '/login',
     builder: (_, state) => LoginScreen(

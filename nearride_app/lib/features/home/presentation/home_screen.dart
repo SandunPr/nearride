@@ -166,6 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           selectedIndex: 0,
           onDestinationSelected: (index) {
             if (index == 1) context.push('/search');
+            if (index == 2) context.push('/favourites');
             if (index == 3) context.push('/profile');
           },
           destinations: const [
