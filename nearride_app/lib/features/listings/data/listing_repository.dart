@@ -57,6 +57,17 @@ class ListingRepository {
         (await api.dio.get('/listings/$id')).data['data'],
       );
 
+  Future<List<VehicleListing>> favourites() async =>
+      _list(await api.dio.get('/favourites'));
+
+  Future<void> saveFavourite(String id) async {
+    await api.dio.post('/favourites/$id');
+  }
+
+  Future<void> removeFavourite(String id) async {
+    await api.dio.delete('/favourites/$id');
+  }
+
   Future<void> event(String id, String type) async {
     try {
       await api.dio.post(
