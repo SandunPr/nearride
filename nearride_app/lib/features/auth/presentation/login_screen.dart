@@ -36,10 +36,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return 'Sign in failed. Please try again.';
   }
 
+  void showStatus(String message, {required bool success}) {
+    final colors = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: success ? colors.primary : colors.error,
+        ),
+      );
+  }
+
   Future<void> finish(Future<Response<dynamic>> request) async {
     final response = await request;
     await ref.read(tokenStoreProvider).save(response.data['data']['session'] as Map<String, dynamic>);
-    if (mounted) context.go('/');
+    if (mounted) {
+      showStatus('Signed in successfully.', success: true);
+      context.go('/');
+    }
   }
 
   Future<void> submit() async {
@@ -47,7 +62,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await finish(ref.read(apiProvider).dio.post('/auth/login', data: {'email': email.text.trim(), 'password': password.text}));
     } catch (exception) {
-      if (mounted) setState(() => error = messageFor(exception));
+      if (mounted) {
+        final message = messageFor(exception);
+        setState(() => error = message);
+        showStatus(message, success: false);
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -57,11 +76,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() { loading = true; error = null; });
     try {
       await ref.read(authServiceProvider).signInWithGoogle();
-      if (mounted) context.go('/');
+      if (mounted) {
+        showStatus('Signed in with Google successfully.', success: true);
+        context.go('/');
+      }
     } on GoogleSignInCancelled {
-      // Closing the Google account picker is not an error.
+      if (mounted) showStatus('Google sign-in was cancelled.', success: false);
     } catch (exception) {
-      if (mounted) setState(() => error = AuthService.messageFor(exception));
+      if (mounted) {
+        final message = AuthService.messageFor(exception);
+        setState(() => error = message);
+        showStatus(message, success: false);
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -69,7 +95,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              tooltip: 'Home',
+              onPressed: () => context.go('/'),
+              icon: const Icon(Icons.home_outlined),
+            ),
+          ],
+        ),
         body: SafeArea(
           child: ListView(padding: const EdgeInsets.all(24), children: [
             Text('Welcome back', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),

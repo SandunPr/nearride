@@ -61,6 +61,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return 'Could not create your account. Please try again.';
   }
 
+  void showStatus(String message, {required bool success}) {
+    final colors = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: success ? colors.primary : colors.error,
+        ),
+      );
+  }
+
   Future<void> submit() async {
     if (!formKey.currentState!.validate()) return;
     setState(() {
@@ -80,9 +92,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await ref.read(tokenStoreProvider).save(
             response.data['data']['session'] as Map<String, dynamic>,
           );
-      if (mounted) context.go('/');
+      if (mounted) {
+        showStatus('Account created successfully.', success: true);
+        context.go('/');
+      }
     } catch (exception) {
-      if (mounted) setState(() => error = messageFor(exception));
+      if (mounted) {
+        final message = messageFor(exception);
+        setState(() => error = message);
+        showStatus(message, success: false);
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -95,11 +114,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     try {
       await ref.read(authServiceProvider).signInWithGoogle();
-      if (mounted) context.go('/');
+      if (mounted) {
+        showStatus('Registered with Google successfully.', success: true);
+        context.go('/');
+      }
     } on GoogleSignInCancelled {
-      // Closing the Google account picker is not an error.
+      if (mounted) showStatus('Google registration was cancelled.', success: false);
     } catch (exception) {
-      if (mounted) setState(() => error = AuthService.messageFor(exception));
+      if (mounted) {
+        final message = AuthService.messageFor(exception);
+        setState(() => error = message);
+        showStatus(message, success: false);
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -107,7 +133,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Create account')),
+        appBar: AppBar(
+          title: const Text('Create account'),
+          actions: [
+            IconButton(
+              tooltip: 'Home',
+              onPressed: () => context.go('/'),
+              icon: const Icon(Icons.home_outlined),
+            ),
+          ],
+        ),
         body: SafeArea(
           child: Form(
             key: formKey,
