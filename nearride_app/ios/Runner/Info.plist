@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Google sample app ID. Replace with the NearRide AdMob app ID before release. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location is used to find nearby listings. Your continuous location history is not stored.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

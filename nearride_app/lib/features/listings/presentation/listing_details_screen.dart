@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/ads/admob_banner.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/vehicle_listing.dart';
 import '../../../shared/providers/providers.dart';
@@ -34,6 +35,7 @@ class ListingDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
         appBar: AppBar(title: const Text('Listing details')),
+        bottomNavigationBar: const AdMobBanner(),
         body: FutureBuilder<VehicleListing>(
           future: ref.read(listingRepositoryProvider).detail(id),
           builder: (context, snapshot) {
