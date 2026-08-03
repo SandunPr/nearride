@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/token_store.dart';
 import 'core/theme/app_theme.dart';
+import 'features/admin/presentation/admin_listings_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
 import 'features/home/presentation/home_screen.dart';
@@ -43,6 +44,18 @@ final router = GoRouter(initialLocation: '/', routes: [
       ).toString();
     },
     builder: (_, __) => const ProviderScreen(),
+  ),
+  GoRoute(
+    path: '/admin/listings',
+    redirect: (_, state) async {
+      final accessToken = await const TokenStore().access();
+      if (accessToken != null && accessToken.isNotEmpty) return null;
+      return Uri(
+        path: '/login',
+        queryParameters: {'redirect': state.matchedLocation},
+      ).toString();
+    },
+    builder: (_, __) => const AdminListingsScreen(),
   ),
 ]);
 

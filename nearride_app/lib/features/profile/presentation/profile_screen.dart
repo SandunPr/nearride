@@ -26,6 +26,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool whatsappSameAsPhone = false;
   String email = '';
   String? avatarUrl;
+  bool isAdmin = false;
   bool loading = true;
   bool saving = false;
   String? error;
@@ -63,6 +64,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     whatsappSameAsPhone = phone.text.isNotEmpty && phone.text == whatsapp.text;
     email = user['email'] as String? ?? '';
     avatarUrl = user['avatarUrl'] as String?;
+    isAdmin = user['isAdmin'] == true || user['isAdmin'] == 1;
   }
 
   void applyProvider(Map<String, dynamic>? provider) {
@@ -388,6 +390,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    if (isAdmin) ...[
+                      FilledButton.tonalIcon(
+                        onPressed: saving
+                            ? null
+                            : () => context.push('/admin/listings'),
+                        icon: const Icon(Icons.admin_panel_settings_outlined),
+                        label: const Text('Review Pending Listings'),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     OutlinedButton.icon(
                       onPressed:
                           saving ? null : () => context.push('/provider'),
