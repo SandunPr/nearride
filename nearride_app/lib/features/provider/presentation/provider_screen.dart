@@ -43,8 +43,8 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   bool providerProfileComplete = false;
   bool loadingProfileContacts = true;
 
-  double lat = 6.9271;
-  double lng = 79.8612;
+  double? lat;
+  double? lng;
   bool fetchingLocation = false;
   String? locationStatus;
 
@@ -57,6 +57,7 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   void initState() {
     super.initState();
     loadProfileContacts();
+    detectLocation();
   }
 
   @override
@@ -126,8 +127,8 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
         if (result.position != null) {
           lat = result.position!.latitude;
           lng = result.position!.longitude;
-          locationStatus =
-              'Location updated (${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)})';
+          locationStatus = result.message ??
+              'Location updated (${lat!.toStringAsFixed(4)}, ${lng!.toStringAsFixed(4)})';
         } else {
           locationStatus = result.message ?? 'Could not detect location.';
         }
@@ -198,6 +199,12 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
       );
       return;
     }
+    if (lat == null || lng == null) {
+      setState(
+        () => error = 'Detect your GPS location before creating the listing.',
+      );
+      return;
+    }
     if (hasVehicle && vehicleNumber.text.trim().isEmpty) {
       setState(() => error = 'Please enter the vehicle number.');
       return;
@@ -258,13 +265,14 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
           'hasAirConditioning': hasAirConditioning,
           'availableNow': availableNow,
           'longDistanceAvailable': longDistanceAvailable,
-          'latitude': lat,
-          'longitude': lng,
+          'latitude': lat!,
+          'longitude': lng!,
           'publicAreaName': area.text.trim().isEmpty ? null : area.text.trim(),
         },
       );
 
       final publicId = response.data['data']['publicId'] as String?;
+      final createdStatus = response.data['data']['status'] as String?;
 
       if (publicId != null && selectedImages.isNotEmpty) {
         final formFiles = <MultipartFile>[];
@@ -282,9 +290,15 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
         await showDialog<void>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Listing Submitted'),
-            content: const Text(
-              'Your listing was created successfully and is now active or pending review.',
+            title: Text(
+              createdStatus == 'active'
+                  ? 'Listing Published'
+                  : 'Listing Pending Review',
+            ),
+            content: Text(
+              createdStatus == 'active'
+                  ? 'Your listing is active and can now appear in nearby feeds.'
+                  : 'Your listing was saved successfully but will not appear in public feeds until it is approved.',
             ),
             actions: [
               TextButton(
@@ -324,6 +338,12 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
     if (step == 4 && !providerProfileComplete) {
       setState(
         () => error = 'Complete the provider section in your profile first.',
+      );
+      return;
+    }
+    if (step == 3 && (lat == null || lng == null)) {
+      setState(
+        () => error = 'Detect your GPS location before continuing.',
       );
       return;
     }
@@ -618,7 +638,9 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'GPS Coordinates: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)} (Exact location is kept private)',
+                          lat == null || lng == null
+                              ? 'GPS location is required. Exact coordinates remain private.'
+                              : 'GPS Coordinates: ${lat!.toStringAsFixed(4)}, ${lng!.toStringAsFixed(4)} (Exact location is kept private)',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         if (locationStatus != null)
@@ -627,11 +649,28 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
                             child: Text(
                               locationStatus!,
                               style: TextStyle(
-                                color: locationStatus!.contains('updated')
+                                color: lat != null && lng != null
                                     ? Colors.green
                                     : Theme.of(context).colorScheme.error,
                               ),
                             ),
+                          ),
+                        if (locationStatus?.contains('turned off') == true)
+                          TextButton.icon(
+                            onPressed: () async {
+                              await LocationService().openLocationSettings();
+                            },
+                            icon: const Icon(Icons.settings_outlined),
+                            label: const Text('Open Location Settings'),
+                          ),
+                        if (locationStatus?.contains('permanently denied') ==
+                            true)
+                          TextButton.icon(
+                            onPressed: () async {
+                              await LocationService().openAppSettings();
+                            },
+                            icon: const Icon(Icons.settings_outlined),
+                            label: const Text('Open App Settings'),
                           ),
                       ],
                     ),
