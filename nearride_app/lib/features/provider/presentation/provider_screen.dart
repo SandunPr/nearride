@@ -40,6 +40,7 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   final area = TextEditingController();
   String? profilePhone;
   String? profileWhatsapp;
+  bool providerProfileComplete = false;
   bool loadingProfileContacts = true;
 
   double lat = 6.9271;
@@ -81,11 +82,17 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   Future<void> loadProfileContacts() async {
     try {
       final response = await ref.read(apiProvider).dio.get('/auth/me');
+      final providerResponse =
+          await ref.read(apiProvider).dio.get('/provider/profile');
       final user = Map<String, dynamic>.from(response.data['data'] as Map);
+      final provider = providerResponse.data['data'];
       if (mounted) {
         setState(() {
           profilePhone = user['phone'] as String?;
           profileWhatsapp = user['whatsappNumber'] as String?;
+          providerProfileComplete = provider is Map &&
+              (provider['completedProfile'] == true ||
+                  provider['completedProfile'] == 1);
         });
       }
     } catch (exception) {
@@ -178,6 +185,12 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
       setState(
         () => error =
             'Update your mobile and WhatsApp numbers in your profile first.',
+      );
+      return;
+    }
+    if (!providerProfileComplete) {
+      setState(
+        () => error = 'Complete the provider section in your profile first.',
       );
       return;
     }
@@ -297,6 +310,12 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
       setState(
         () => error =
             'Update your mobile and WhatsApp numbers in your profile first.',
+      );
+      return;
+    }
+    if (step == 4 && !providerProfileComplete) {
+      setState(
+        () => error = 'Complete the provider section in your profile first.',
       );
       return;
     }
@@ -654,16 +673,19 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
                               : editProfileContacts,
                           icon: const Icon(Icons.manage_accounts_outlined),
                           label: Text(
-                            profileContactsValid
-                                ? 'Update Profile Contact Numbers'
-                                : 'Complete Profile Contact Numbers',
+                            profileContactsValid && providerProfileComplete
+                                ? 'Update Provider Profile'
+                                : 'Complete Provider Profile',
                           ),
                         ),
-                        if (!loadingProfileContacts && !profileContactsValid)
+                        if (!loadingProfileContacts &&
+                            (!profileContactsValid || !providerProfileComplete))
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              'A valid mobile and WhatsApp number are required before creating a listing.',
+                              !profileContactsValid
+                                  ? 'A valid mobile and WhatsApp number are required before creating a listing.'
+                                  : 'Complete the provider section in your profile before creating a listing.',
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),

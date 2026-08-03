@@ -19,6 +19,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final fullName = TextEditingController();
   final phone = TextEditingController();
   final whatsapp = TextEditingController();
+  final providerDisplayName = TextEditingController();
+  final providerDescription = TextEditingController();
+  String providerType = 'both';
+  bool providerProfileComplete = false;
   bool whatsappSameAsPhone = false;
   String email = '';
   String? avatarUrl;
@@ -37,6 +41,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     fullName.dispose();
     phone.dispose();
     whatsapp.dispose();
+    providerDisplayName.dispose();
+    providerDescription.dispose();
     super.dispose();
   }
 
@@ -59,6 +65,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     avatarUrl = user['avatarUrl'] as String?;
   }
 
+  void applyProvider(Map<String, dynamic>? provider) {
+    if (provider == null) {
+      providerDisplayName.text = fullName.text;
+      providerDescription.clear();
+      providerType = 'both';
+      providerProfileComplete = false;
+      return;
+    }
+    providerDisplayName.text =
+        provider['displayName'] as String? ?? fullName.text;
+    providerDescription.text = provider['description'] as String? ?? '';
+    providerType = provider['providerType'] as String? ?? 'both';
+    providerProfileComplete = provider['completedProfile'] == true ||
+        provider['completedProfile'] == 1;
+  }
+
   String normalizedMobile(String value) =>
       value.replaceAll(RegExp(r'[^0-9]'), '');
 
@@ -74,9 +96,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> load() async {
     try {
       final response = await ref.read(apiProvider).dio.get('/auth/me');
+      final providerResponse =
+          await ref.read(apiProvider).dio.get('/provider/profile');
       if (mounted) {
-        setState(
-            () => applyUser(Map<String, dynamic>.from(response.data['data'])));
+        setState(() {
+          applyUser(Map<String, dynamic>.from(response.data['data']));
+          final data = providerResponse.data['data'];
+          applyProvider(
+            data is Map ? Map<String, dynamic>.from(data) : null,
+          );
+        });
       }
     } on DioException catch (exception) {
       if (exception.response?.statusCode == 401) {
@@ -96,18 +125,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       error = null;
     });
     try {
-      final response = await ref.read(apiProvider).dio.patch('/auth/me', data: {
+      final dio = ref.read(apiProvider).dio;
+      final response = await dio.patch('/auth/me', data: {
         'fullName': fullName.text.trim(),
         'phone': normalizedMobile(phone.text),
         'whatsappNumber': whatsappSameAsPhone
             ? normalizedMobile(phone.text)
             : normalizedMobile(whatsapp.text),
       });
+      final providerResponse = await dio.post('/provider/profile', data: {
+        'displayName': providerDisplayName.text.trim(),
+        'providerType': providerType,
+        'description': providerDescription.text.trim().isEmpty
+            ? null
+            : providerDescription.text.trim(),
+      });
       if (mounted) {
-        setState(
-            () => applyUser(Map<String, dynamic>.from(response.data['data'])));
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Profile updated.')));
+        setState(() {
+          applyUser(Map<String, dynamic>.from(response.data['data']));
+          applyProvider(
+            Map<String, dynamic>.from(providerResponse.data['data']),
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Provider profile completed successfully.')));
       }
     } catch (exception) {
       if (mounted) setState(() => error = messageFor(exception));
@@ -255,6 +296,80 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       validator: (value) => validateMobile(
                         whatsappSameAsPhone ? phone.text : value,
                         'WhatsApp number',
+                      ),
+                    ),
+                    const Divider(height: 40),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Provider profile',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        Chip(
+                          avatar: Icon(
+                            providerProfileComplete
+                                ? Icons.check_circle
+                                : Icons.info_outline,
+                            size: 18,
+                          ),
+                          label: Text(
+                            providerProfileComplete
+                                ? 'Complete'
+                                : 'Required for listings',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: providerDisplayName,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Provider display name *',
+                        hintText: 'Name shown on your listings',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().length < 2
+                              ? 'Enter your provider display name.'
+                              : null,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: providerType,
+                      decoration: const InputDecoration(
+                        labelText: 'Provider type *',
+                        prefixIcon: Icon(Icons.business_center_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'vehicle_owner',
+                          child: Text('Vehicle owner'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'driver',
+                          child: Text('Driver'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'both',
+                          child: Text('Vehicle owner and driver'),
+                        ),
+                      ],
+                      onChanged: saving
+                          ? null
+                          : (value) => setState(() {
+                                if (value != null) providerType = value;
+                              }),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: providerDescription,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Provider description (optional)',
+                        hintText: 'Describe your driving or vehicle service',
                       ),
                     ),
                     if (error != null)
