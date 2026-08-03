@@ -38,8 +38,9 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   bool availableNow = true;
   bool longDistanceAvailable = true;
   final area = TextEditingController();
-  final phone = TextEditingController();
-  final whatsapp = TextEditingController();
+  String? profilePhone;
+  String? profileWhatsapp;
+  bool loadingProfileContacts = true;
 
   double lat = 6.9271;
   double lng = 79.8612;
@@ -50,6 +51,12 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   XFile? driverPhoto;
   bool loading = false;
   String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfileContacts();
+  }
 
   @override
   void dispose() {
@@ -64,9 +71,36 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
     loadCapacity.dispose();
     startingPrice.dispose();
     area.dispose();
-    phone.dispose();
-    whatsapp.dispose();
     super.dispose();
+  }
+
+  bool get profileContactsValid =>
+      RegExp(r'^07\d{8}$').hasMatch(profilePhone ?? '') &&
+      RegExp(r'^07\d{8}$').hasMatch(profileWhatsapp ?? '');
+
+  Future<void> loadProfileContacts() async {
+    try {
+      final response = await ref.read(apiProvider).dio.get('/auth/me');
+      final user = Map<String, dynamic>.from(response.data['data'] as Map);
+      if (mounted) {
+        setState(() {
+          profilePhone = user['phone'] as String?;
+          profileWhatsapp = user['whatsappNumber'] as String?;
+        });
+      }
+    } catch (exception) {
+      if (mounted) setState(() => error = messageFor(exception));
+    } finally {
+      if (mounted) setState(() => loadingProfileContacts = false);
+    }
+  }
+
+  Future<void> editProfileContacts() async {
+    await context.push('/profile');
+    if (mounted) {
+      setState(() => loadingProfileContacts = true);
+      await loadProfileContacts();
+    }
   }
 
   Future<void> detectLocation() async {
@@ -140,8 +174,11 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
       setState(() => error = 'Please enter a title for your listing.');
       return;
     }
-    if (phone.text.trim().isEmpty) {
-      setState(() => error = 'Please enter a contact phone number.');
+    if (!profileContactsValid) {
+      setState(
+        () => error =
+            'Update your mobile and WhatsApp numbers in your profile first.',
+      );
       return;
     }
     if (hasVehicle && vehicleNumber.text.trim().isEmpty) {
@@ -207,9 +244,6 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
           'latitude': lat,
           'longitude': lng,
           'publicAreaName': area.text.trim().isEmpty ? null : area.text.trim(),
-          'phone': phone.text.trim(),
-          'whatsappNumber':
-              whatsapp.text.trim().isEmpty ? null : whatsapp.text.trim(),
         },
       );
 
@@ -259,8 +293,11 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
       setState(() => error = 'Please enter a title for your listing.');
       return;
     }
-    if (step == 4 && phone.text.trim().isEmpty) {
-      setState(() => error = 'Please enter a contact phone number.');
+    if (step == 4 && !profileContactsValid) {
+      setState(
+        () => error =
+            'Update your mobile and WhatsApp numbers in your profile first.',
+      );
       return;
     }
     if (step == 1 && hasVehicle && vehicleNumber.text.trim().isEmpty) {
@@ -577,19 +614,61 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextField(
-                          controller: phone,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                              labelText: 'Primary Phone Number *'),
+                        Text(
+                          'Contact Details',
+                          style: Theme.of(context).textTheme.titleSmall,
                         ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: whatsapp,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                              labelText: 'WhatsApp Number (Optional)'),
+                        const SizedBox(height: 8),
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: loadingProfileContacts
+                              ? const Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : Column(
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(Icons.phone_outlined),
+                                      title: const Text('Mobile'),
+                                      subtitle: Text(
+                                        profilePhone ?? 'Not configured',
+                                      ),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.chat_outlined),
+                                      title: const Text('WhatsApp'),
+                                      subtitle: Text(
+                                        profileWhatsapp ?? 'Not configured',
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: loadingProfileContacts
+                              ? null
+                              : editProfileContacts,
+                          icon: const Icon(Icons.manage_accounts_outlined),
+                          label: Text(
+                            profileContactsValid
+                                ? 'Update Profile Contact Numbers'
+                                : 'Complete Profile Contact Numbers',
+                          ),
+                        ),
+                        if (!loadingProfileContacts && !profileContactsValid)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              'A valid mobile and WhatsApp number are required before creating a listing.',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 16),
                         if (hasVehicle) ...[
                           Text(

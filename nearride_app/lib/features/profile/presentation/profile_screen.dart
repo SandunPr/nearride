@@ -18,6 +18,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final formKey = GlobalKey<FormState>();
   final fullName = TextEditingController();
   final phone = TextEditingController();
+  final whatsapp = TextEditingController();
+  bool whatsappSameAsPhone = false;
   String email = '';
   String? avatarUrl;
   bool loading = true;
@@ -34,6 +36,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     fullName.dispose();
     phone.dispose();
+    whatsapp.dispose();
     super.dispose();
   }
 
@@ -50,14 +53,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void applyUser(Map<String, dynamic> user) {
     fullName.text = user['fullName'] as String? ?? '';
     phone.text = user['phone'] as String? ?? '';
+    whatsapp.text = user['whatsappNumber'] as String? ?? '';
+    whatsappSameAsPhone = phone.text.isNotEmpty && phone.text == whatsapp.text;
     email = user['email'] as String? ?? '';
     avatarUrl = user['avatarUrl'] as String?;
+  }
+
+  String normalizedMobile(String value) =>
+      value.replaceAll(RegExp(r'[^0-9]'), '');
+
+  String? validateMobile(String? value, String label) {
+    final number = normalizedMobile(value ?? '');
+    if (number.isEmpty) return '$label is required for provider listings.';
+    if (!RegExp(r'^07\d{8}$').hasMatch(number)) {
+      return 'Enter a valid local mobile number (07XXXXXXXX).';
+    }
+    return null;
   }
 
   Future<void> load() async {
     try {
       final response = await ref.read(apiProvider).dio.get('/auth/me');
-      if (mounted) setState(() => applyUser(Map<String, dynamic>.from(response.data['data'])));
+      if (mounted) {
+        setState(
+            () => applyUser(Map<String, dynamic>.from(response.data['data'])));
+      }
     } on DioException catch (exception) {
       if (exception.response?.statusCode == 401) {
         if (mounted) context.go('/login');
@@ -71,15 +91,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> save() async {
     if (!formKey.currentState!.validate()) return;
-    setState(() { saving = true; error = null; });
+    setState(() {
+      saving = true;
+      error = null;
+    });
     try {
       final response = await ref.read(apiProvider).dio.patch('/auth/me', data: {
         'fullName': fullName.text.trim(),
-        'phone': phone.text.trim().isEmpty ? null : phone.text.trim(),
+        'phone': normalizedMobile(phone.text),
+        'whatsappNumber': whatsappSameAsPhone
+            ? normalizedMobile(phone.text)
+            : normalizedMobile(whatsapp.text),
       });
       if (mounted) {
-        setState(() => applyUser(Map<String, dynamic>.from(response.data['data'])));
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+        setState(
+            () => applyUser(Map<String, dynamic>.from(response.data['data'])));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Profile updated.')));
       }
     } catch (exception) {
       if (mounted) setState(() => error = messageFor(exception));
@@ -95,14 +123,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       maxWidth: 1200,
     );
     if (image == null) return;
-    setState(() { saving = true; error = null; });
+    setState(() {
+      saving = true;
+      error = null;
+    });
     try {
-      final file = await MultipartFile.fromFile(image.path, filename: image.name);
+      final file =
+          await MultipartFile.fromFile(image.path, filename: image.name);
       final response = await ref.read(apiProvider).dio.post(
-        '/auth/me/avatar',
-        data: FormData.fromMap({'avatar': file}),
-      );
-      if (mounted) setState(() => applyUser(Map<String, dynamic>.from(response.data['data'])));
+            '/auth/me/avatar',
+            data: FormData.fromMap({'avatar': file}),
+          );
+      if (mounted) {
+        setState(
+            () => applyUser(Map<String, dynamic>.from(response.data['data'])));
+      }
     } catch (exception) {
       if (mounted) setState(() => error = messageFor(exception));
     } finally {
@@ -114,7 +149,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final tokens = ref.read(tokenStoreProvider);
     final refreshToken = await tokens.refresh();
     try {
-      await ref.read(apiProvider).dio.post('/auth/logout', data: {'refreshToken': refreshToken});
+      await ref
+          .read(apiProvider)
+          .dio
+          .post('/auth/logout', data: {'refreshToken': refreshToken});
     } catch (_) {
       // Local logout must still work when the server is unavailable.
     }
@@ -138,9 +176,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 54,
-                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            backgroundImage: avatarUrl == null ? null : CachedNetworkImageProvider(avatarUrl!),
-                            child: avatarUrl == null ? const Icon(Icons.person, size: 54) : null,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            backgroundImage: avatarUrl == null
+                                ? null
+                                : CachedNetworkImageProvider(avatarUrl!),
+                            child: avatarUrl == null
+                                ? const Icon(Icons.person, size: 54)
+                                : null,
                           ),
                           Positioned(
                             right: -4,
@@ -158,7 +202,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     TextFormField(
                       controller: fullName,
                       decoration: const InputDecoration(labelText: 'Full name'),
-                      validator: (value) => value == null || value.trim().length < 2 ? 'Enter your full name.' : null,
+                      validator: (value) =>
+                          value == null || value.trim().length < 2
+                              ? 'Enter your full name.'
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -170,12 +217,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     TextFormField(
                       controller: phone,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Phone (optional)'),
+                      autofillHints: const [AutofillHints.telephoneNumber],
+                      decoration: const InputDecoration(
+                        labelText: 'Local mobile number *',
+                        hintText: '07XXXXXXXX',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                      validator: (value) =>
+                          validateMobile(value, 'Mobile number'),
+                      onChanged: (value) {
+                        if (whatsappSameAsPhone) whatsapp.text = value;
+                      },
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: whatsappSameAsPhone,
+                      title: const Text('WhatsApp is the same as mobile'),
+                      onChanged: saving
+                          ? null
+                          : (value) => setState(() {
+                                whatsappSameAsPhone = value ?? false;
+                                if (whatsappSameAsPhone) {
+                                  whatsapp.text = phone.text;
+                                }
+                              }),
+                    ),
+                    TextFormField(
+                      controller: whatsapp,
+                      enabled: !whatsappSameAsPhone,
+                      keyboardType: TextInputType.phone,
+                      autofillHints: const [AutofillHints.telephoneNumber],
+                      decoration: const InputDecoration(
+                        labelText: 'WhatsApp number *',
+                        hintText: '07XXXXXXXX',
+                        prefixIcon: Icon(Icons.chat_outlined),
+                      ),
+                      validator: (value) => validateMobile(
+                        whatsappSameAsPhone ? phone.text : value,
+                        'WhatsApp number',
+                      ),
                     ),
                     if (error != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
-                        child: Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                        child: Text(error!,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error)),
                       ),
                     const SizedBox(height: 20),
                     FilledButton(
@@ -187,7 +274,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: saving ? null : () => context.push('/provider'),
+                      onPressed:
+                          saving ? null : () => context.push('/provider'),
                       icon: const Icon(Icons.directions_car_outlined),
                       label: const Text('Manage provider listings'),
                     ),
