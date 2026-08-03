@@ -96,6 +96,10 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
         });
       }
     } catch (exception) {
+      if (exception is DioException && exception.response?.statusCode == 401) {
+        if (mounted) context.go('/login?redirect=%2Fprovider');
+        return;
+      }
       if (mounted) setState(() => error = messageFor(exception));
     } finally {
       if (mounted) setState(() => loadingProfileContacts = false);
@@ -295,6 +299,10 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
         );
       }
     } catch (exception) {
+      if (exception is DioException && exception.response?.statusCode == 401) {
+        if (mounted) context.go('/login?redirect=%2Fprovider');
+        return;
+      }
       if (mounted) setState(() => error = messageFor(exception));
     } finally {
       if (mounted) setState(() => loading = false);

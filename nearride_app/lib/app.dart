@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/constants/app_constants.dart';
+import 'core/services/token_store.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
@@ -14,14 +15,35 @@ import 'features/search/presentation/search_screen.dart';
 final router = GoRouter(initialLocation: '/', routes: [
   GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
   GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
-  GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+  GoRoute(
+    path: '/login',
+    builder: (_, state) => LoginScreen(
+      redirectTo: state.uri.queryParameters['redirect'],
+    ),
+  ),
+  GoRoute(
+    path: '/register',
+    builder: (_, state) => RegisterScreen(
+      redirectTo: state.uri.queryParameters['redirect'],
+    ),
+  ),
   GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
   GoRoute(
       path: '/listing/:id',
       builder: (_, state) =>
           ListingDetailsScreen(id: state.pathParameters['id']!)),
-  GoRoute(path: '/provider', builder: (_, __) => const ProviderScreen()),
+  GoRoute(
+    path: '/provider',
+    redirect: (_, state) async {
+      final accessToken = await const TokenStore().access();
+      if (accessToken != null && accessToken.isNotEmpty) return null;
+      return Uri(
+        path: '/login',
+        queryParameters: {'redirect': state.matchedLocation},
+      ).toString();
+    },
+    builder: (_, __) => const ProviderScreen(),
+  ),
 ]);
 
 class NearRideApp extends StatelessWidget {

@@ -7,7 +7,9 @@ import '../../../shared/providers/providers.dart';
 import '../data/auth_service.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.redirectTo});
+
+  final String? redirectTo;
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -61,6 +63,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return 'Could not create your account. Please try again.';
   }
 
+  String get destination {
+    final redirect = widget.redirectTo;
+    return redirect != null &&
+            redirect.startsWith('/') &&
+            !redirect.startsWith('//')
+        ? redirect
+        : '/';
+  }
+
   void showStatus(String message, {required bool success}) {
     final colors = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context)
@@ -94,7 +105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       if (mounted) {
         showStatus('Account created successfully.', success: true);
-        context.go('/');
+        context.go(destination);
       }
     } catch (exception) {
       if (mounted) {
@@ -116,10 +127,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await ref.read(authServiceProvider).signInWithGoogle();
       if (mounted) {
         showStatus('Registered with Google successfully.', success: true);
-        context.go('/');
+        context.go(destination);
       }
     } on GoogleSignInCancelled {
-      if (mounted) showStatus('Google registration was cancelled.', success: false);
+      if (mounted) {
+        showStatus('Google registration was cancelled.', success: false);
+      }
     } catch (exception) {
       if (mounted) {
         final message = AuthService.messageFor(exception);
@@ -156,7 +169,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Save vehicles and create your own provider listings.'),
+                const Text(
+                    'Save vehicles and create your own provider listings.'),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: fullName,
@@ -174,7 +188,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   validator: (value) {
                     final required = requiredText(value, 'Email');
                     if (required != null) return required;
-                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value!.trim())) {
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(value!.trim())) {
                       return 'Enter a valid email address.';
                     }
                     return null;
@@ -187,7 +202,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.telephoneNumber],
-                  decoration: const InputDecoration(labelText: 'Phone (optional)'),
+                  decoration:
+                      const InputDecoration(labelText: 'Phone (optional)'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -204,8 +220,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     suffixIcon: IconButton(
-                      onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                      icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () =>
+                          setState(() => obscurePassword = !obscurePassword),
+                      icon: Icon(obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off),
                     ),
                   ),
                 ),
@@ -217,15 +236,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onFieldSubmitted: (_) {
                     if (!loading) submit();
                   },
-                  validator: (value) => value != password.text ? 'Passwords do not match.' : null,
-                  decoration: const InputDecoration(labelText: 'Confirm password'),
+                  validator: (value) =>
+                      value != password.text ? 'Passwords do not match.' : null,
+                  decoration:
+                      const InputDecoration(labelText: 'Confirm password'),
                 ),
                 if (error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
                       error!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      style:
+                          TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ),
                 const SizedBox(height: 20),
@@ -233,7 +255,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: loading ? null : submit,
                   child: Padding(
                     padding: const EdgeInsets.all(14),
-                    child: Text(loading ? 'Creating account...' : 'Create account'),
+                    child: Text(
+                        loading ? 'Creating account...' : 'Create account'),
                   ),
                 ),
                 const Padding(
