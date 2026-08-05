@@ -189,74 +189,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Find a vehicle nearby',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String?>(
+                              initialValue: category,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Vehicle type',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('All vehicles'),
+                                ),
+                                ...categories.entries.map(
+                                  (entry) => DropdownMenuItem<String?>(
+                                    value: entry.key,
+                                    child: Text(entry.value),
+                                  ),
+                                ),
+                              ],
+                              onChanged: loading
+                                  ? null
+                                  : (value) =>
+                                      setState(() => category = value),
                             ),
-                      ),
-                      const SizedBox(height: 14),
-                      DropdownButtonFormField<String?>(
-                        initialValue: category,
-                        decoration: const InputDecoration(
-                          labelText: 'Vehicle type',
-                          prefixIcon: Icon(Icons.directions_car_outlined),
-                        ),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('All vehicles'),
                           ),
-                          ...categories.entries.map(
-                            (entry) => DropdownMenuItem<String?>(
-                              value: entry.key,
-                              child: Text(entry.value),
+                          const SizedBox(width: 4),
+                          IconButton.filled(
+                            tooltip: 'Search nearby',
+                            onPressed: loading ? null : load,
+                            icon: loading
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.search),
+                          ),
+                          IconButton(
+                            tooltip: 'Keyword search',
+                            onPressed: () => context.push('/search'),
+                            icon: const Icon(Icons.tune),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 58,
+                            child: Text(
+                              '${radius.round()} km',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: radius,
+                              min: 1,
+                              max: 100,
+                              divisions: 99,
+                              label: '${radius.round()} km',
+                              onChanged: loading
+                                  ? null
+                                  : (value) =>
+                                      setState(() => radius = value),
                             ),
                           ),
                         ],
-                        onChanged: loading
-                            ? null
-                            : (value) => setState(() => category = value),
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<double>(
-                        initialValue: radius,
-                        decoration: const InputDecoration(
-                          labelText: 'Maximum distance',
-                          prefixIcon: Icon(Icons.near_me_outlined),
-                        ),
-                        items: const [5, 10, 25, 50, 100]
-                            .map(
-                              (value) => DropdownMenuItem<double>(
-                                value: value.toDouble(),
-                                child: Text('$value km'),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: loading
-                            ? null
-                            : (value) {
-                                if (value != null) {
-                                  setState(() => radius = value);
-                                }
-                              },
-                      ),
-                      const SizedBox(height: 14),
-                      FilledButton.icon(
-                        onPressed: loading ? null : load,
-                        icon: const Icon(Icons.search),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 13),
-                          child: Text('Search'),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => context.push('/search'),
-                        child: const Text('Advanced keyword search'),
                       ),
                     ],
                   ),
