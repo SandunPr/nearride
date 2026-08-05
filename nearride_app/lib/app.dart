@@ -57,8 +57,12 @@ final router = GoRouter(initialLocation: '/launch', routes: [
   GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
   GoRoute(
       path: '/listing/:id',
-      builder: (_, state) =>
-          ListingDetailsScreen(id: state.pathParameters['id']!)),
+      builder: (_, state) => ListingDetailsScreen(
+            id: state.pathParameters['id']!,
+            distanceKm: double.tryParse(
+              state.uri.queryParameters['distanceKm'] ?? '',
+            ),
+          )),
   GoRoute(
     path: '/provider',
     redirect: (_, state) async {

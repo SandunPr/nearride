@@ -9,8 +9,18 @@ import '../../../shared/models/vehicle_listing.dart';
 import '../../../shared/providers/providers.dart';
 
 class ListingDetailsScreen extends ConsumerWidget {
-  const ListingDetailsScreen({super.key, required this.id});
+  const ListingDetailsScreen({
+    super.key,
+    required this.id,
+    this.distanceKm,
+  });
+
   final String id;
+  final double? distanceKm;
+
+  String distanceLabel(double distance) => distance < 1
+      ? '${(distance * 1000).round()} m away'
+      : '${distance.toStringAsFixed(1)} km away';
 
   String normalized(String value) {
     var number = value.replaceAll(RegExp(r'[^0-9+]'), '');
@@ -32,7 +42,8 @@ class ListingDetailsScreen extends ConsumerWidget {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Widget infoRow(BuildContext context, IconData icon, String label, String value) =>
+  Widget infoRow(
+          BuildContext context, IconData icon, String label, String value) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(children: [
@@ -90,6 +101,7 @@ class ListingDetailsScreen extends ConsumerWidget {
               return const Center(child: CircularProgressIndicator());
             }
             final listing = snapshot.data!;
+            final resolvedDistance = listing.distanceKm ?? distanceKm;
             return ListView(padding: const EdgeInsets.all(20), children: [
               SizedBox(
                 height: 220,
@@ -127,9 +139,19 @@ class ListingDetailsScreen extends ConsumerWidget {
                       .textTheme
                       .headlineSmall
                       ?.copyWith(fontWeight: FontWeight.bold)),
-              Text('${listing.typeLabel} • ${listing.distanceLabel}'),
+              Text(
+                [
+                  listing.typeLabel,
+                  if (resolvedDistance != null) distanceLabel(resolvedDistance),
+                ].join(' • '),
+              ),
               const SizedBox(height: 16),
               Wrap(spacing: 8, children: [
+                if (listing.listingVerified)
+                  const Chip(
+                    avatar: Icon(Icons.verified, size: 18),
+                    label: Text('Verified listing'),
+                  ),
                 Chip(
                     label: Text(listing.availableNow
                         ? 'Available now'
@@ -196,14 +218,22 @@ class ListingDetailsScreen extends ConsumerWidget {
                 title: 'Driver & Service',
                 icon: Icons.person_outline,
                 children: [
+                  if (listing.listingVerified)
+                    infoRow(
+                      context,
+                      Icons.verified_outlined,
+                      'Listing',
+                      'Admin reviewed and verified',
+                    ),
                   infoRow(context, Icons.person_outline, 'Provider',
                       listing.providerName),
-                  infoRow(
-                    context,
-                    Icons.verified_user_outlined,
-                    'Verification',
-                    listing.providerVerified ? 'Verified Provider' : 'Not Verified',
-                  ),
+                  if (listing.providerVerified)
+                    infoRow(
+                      context,
+                      Icons.verified_user_outlined,
+                      'Verification',
+                      'Verified Provider',
+                    ),
                   infoRow(context, Icons.work_outline, 'Service Type',
                       listing.typeLabel),
                   infoRow(
@@ -212,8 +242,13 @@ class ListingDetailsScreen extends ConsumerWidget {
                     'Availability',
                     listing.availableNow ? 'Available Now' : 'Currently Busy',
                   ),
-                  infoRow(context, Icons.route_outlined, 'Long Distance',
-                      listing.longDistanceAvailable ? 'Available' : 'Not Listed'),
+                  infoRow(
+                      context,
+                      Icons.route_outlined,
+                      'Long Distance',
+                      listing.longDistanceAvailable
+                          ? 'Available'
+                          : 'Not Listed'),
                   if (listing.emergencyContactAvailable)
                     infoRow(context, Icons.emergency_outlined, 'Emergency',
                         'Contact Available'),
@@ -227,8 +262,13 @@ class ListingDetailsScreen extends ConsumerWidget {
                   if (listing.publicAreaName != null)
                     infoRow(context, Icons.location_on_outlined, 'Area',
                         listing.publicAreaName!),
-                  infoRow(context, Icons.near_me_outlined, 'Distance',
-                      listing.distanceLabel),
+                  if (resolvedDistance != null)
+                    infoRow(
+                      context,
+                      Icons.near_me_outlined,
+                      'Distance',
+                      distanceLabel(resolvedDistance),
+                    ),
                   if (listing.priceLabel != null)
                     infoRow(context, Icons.payments_outlined, 'Starting Price',
                         listing.priceLabel!),

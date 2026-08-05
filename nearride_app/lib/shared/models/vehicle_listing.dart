@@ -5,6 +5,7 @@ class VehicleListing {
     required this.listingType,
     required this.providerName,
     required this.providerVerified,
+    required this.listingVerified,
     required this.availableNow,
     required this.phone,
     this.providerAvatarUrl,
@@ -44,6 +45,7 @@ class VehicleListing {
   final String? thumbnailUrl;
   final String? registrationNumber;
   final bool providerVerified;
+  final bool listingVerified;
   final bool availableNow;
   final bool hasAirConditioning;
   final bool longDistanceAvailable;
@@ -86,6 +88,7 @@ class VehicleListing {
       providerName: json['providerName'] ?? 'Independent provider',
       providerAvatarUrl: json['providerAvatarUrl'],
       providerVerified: _boolValue(json['providerVerified']),
+      listingVerified: _boolValue(json['listingVerified']),
       availableNow: _boolValue(json['availableNow']),
       phone: json['phone'] ?? '',
       categoryName: json['categoryName'],

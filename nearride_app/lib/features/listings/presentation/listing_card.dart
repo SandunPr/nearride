@@ -69,7 +69,15 @@ class _ListingCardState extends ConsumerState<ListingCard> {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/listing/${listing.publicId}'),
+        onTap: () {
+          final distance = listing.distanceKm;
+          final location = Uri(
+            path: '/listing/${listing.publicId}',
+            queryParameters:
+                distance == null ? null : {'distanceKm': '$distance'},
+          ).toString();
+          context.push(location);
+        },
         child: Padding(
           padding: const EdgeInsets.all(7),
           child: Row(
@@ -112,6 +120,15 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
+                        if (listing.listingVerified)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4, top: 2),
+                            child: Icon(
+                              Icons.verified,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         IconButton(
                           constraints: const BoxConstraints.tightFor(
                             width: 30,
@@ -186,12 +203,15 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                               ? Icons.check_circle
                               : Icons.schedule,
                           size: 15,
-                          color:
-                              listing.availableNow ? Colors.green : Colors.orange,
+                          color: listing.availableNow
+                              ? Colors.green
+                              : Colors.orange,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          listing.availableNow ? 'Available' : 'Ask Availability',
+                          listing.availableNow
+                              ? 'Available'
+                              : 'Ask Availability',
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                         const Spacer(),
