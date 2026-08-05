@@ -251,8 +251,9 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
           'listingType': type,
           'categoryId': categoryId,
           'title': titleCase(title.text),
-          'description':
-              description.text.trim().isEmpty ? null : titleCase(description.text),
+          'description': description.text.trim().isEmpty
+              ? null
+              : titleCase(description.text),
           'manufacturer': manufacturer.text.trim().isEmpty
               ? null
               : titleCase(manufacturer.text),
@@ -377,9 +378,43 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
     });
   }
 
+  Future<void> cancelCreation() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.exit_to_app_outlined),
+        title: const Text('Exit listing creation?'),
+        content: const Text(
+          'Your listing has not been submitted. Any information entered on this screen will be discarded.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Exit to Home'),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) context.go('/');
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Create Listing')),
+        appBar: AppBar(
+          title: const Text('Create Listing'),
+          actions: [
+            TextButton.icon(
+              onPressed: loading ? null : cancelCreation,
+              icon: const Icon(Icons.close),
+              label: const Text('Cancel'),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
         body: loading
             ? const Center(
                 child: Column(

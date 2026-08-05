@@ -11,6 +11,33 @@ const listings = [
   ['20000000-0000-4000-8000-000000000006', 'bus', 'vehicle_with_driver', 'Air-conditioned bus for group trips', 'Ashok Leyland', 'Viking', 2018, 40, 'Diesel', 'Manual', true, 30000, 'per_day', 6.9270790, 79.8612440, 'Colombo', 100],
 ];
 
+const listingImages = {
+  car: [
+    'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'three-wheeler': [
+    'https://images.unsplash.com/photo-1590517862150-930aa1822f9a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1571210059434-edf0dc48e414?auto=format&fit=crop&w=1200&q=80',
+  ],
+  van: [
+    'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1529369623266-f5264b696110?auto=format&fit=crop&w=1200&q=80',
+  ],
+  motorbike: [
+    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80',
+  ],
+  pickup: [
+    'https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1200&q=80',
+  ],
+  bus: [
+    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1200&q=80',
+  ],
+};
+
 async function seed() {
   let connection;
   try {
@@ -58,17 +85,36 @@ async function seed() {
            transmission_type, has_air_conditioning, available_now,
            long_distance_available, starting_price, price_unit, price_negotiable,
            latitude, longitude, public_area_name, service_radius_km, phone,
-           whatsapp_number, preferred_contact_method, status, expires_at,
+           whatsapp_number, preferred_contact_method, status, reviewed_at, expires_at,
            created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, 'Seeded demonstration listing.', ?, ?, ?, ?, ?, ?, ?, 1,
            1, ?, ?, 1, ?, ?, ?, ?, '+94770000000', '+94770000000', 'both', 'active',
-           DATE_ADD(NOW(), INTERVAL 365 DAY), NOW(), NOW())
+           NOW(), DATE_ADD(NOW(), INTERVAL 365 DAY), NOW(), NOW())
          ON DUPLICATE KEY UPDATE title=VALUES(title), category_id=VALUES(category_id),
-           available_now=1, status='active', expires_at=VALUES(expires_at), updated_at=NOW()`,
+           available_now=1, status='active', reviewed_at=NOW(),
+           expires_at=VALUES(expires_at), updated_at=NOW()`,
         [publicId, provider.id, category.id, listingType, title, manufacturer, model,
           year, capacity, fuel, transmission, airConditioning, price, priceUnit,
           latitude, longitude, area, radius],
       );
+
+      const [listing] = await connection.query(
+        'SELECT id FROM listings WHERE public_id=?',
+        [publicId],
+      );
+      await connection.query(
+        'DELETE FROM listing_images WHERE listing_id=?',
+        [listing.id],
+      );
+      for (const [sortOrder, imageUrl] of
+        (listingImages[categorySlug] || []).entries()) {
+        await connection.query(
+          `INSERT INTO listing_images
+            (listing_id, image_url, thumbnail_url, sort_order, created_at)
+           VALUES (?, ?, ?, ?, NOW())`,
+          [listing.id, imageUrl, imageUrl, sortOrder],
+        );
+      }
     }
 
     await connection.commit();
