@@ -219,8 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
                               onChanged: loading
                                   ? null
-                                  : (value) =>
-                                      setState(() => category = value),
+                                  : (value) => setState(() => category = value),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -235,11 +234,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   )
                                 : const Icon(Icons.search),
-                          ),
-                          IconButton(
-                            tooltip: 'Keyword search',
-                            onPressed: () => context.push('/search'),
-                            icon: const Icon(Icons.tune),
                           ),
                         ],
                       ),
@@ -261,8 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               label: '${radius.round()} km',
                               onChanged: loading
                                   ? null
-                                  : (value) =>
-                                      setState(() => radius = value),
+                                  : (value) => setState(() => radius = value),
                             ),
                           ),
                         ],
@@ -281,38 +274,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                   children: [
                     if (message != null)
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(12)),
-                  child: Text(message!),
-                ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Text(message!),
+                      ),
                     Row(children: [
-                Text('Nearby listings',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const Spacer(),
-                TextButton(onPressed: load, child: const Text('Refresh')),
-              ]),
+                      Text('Nearby listings',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      const Spacer(),
+                      TextButton(onPressed: load, child: const Text('Refresh')),
+                    ]),
                     if (loading)
-                ...List.generate(
-                    3,
-                    (_) => const Padding(
-                        padding: EdgeInsets.only(bottom: 12),
-                        child: LinearProgressIndicator()))
+                      ...List.generate(
+                          3,
+                          (_) => const Padding(
+                              padding: EdgeInsets.only(bottom: 12),
+                              child: LinearProgressIndicator()))
                     else if (items.isEmpty)
-                const Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(
-                        child: Text('No active listings found in this area.')))
+                      const Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Center(
+                              child: Text(
+                                  'No active listings found in this area.')))
                     else
-                ...items.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: ListingCard(listing: item))),
+                      ...items.map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ListingCard(listing: item))),
                   ],
                 ),
               ),

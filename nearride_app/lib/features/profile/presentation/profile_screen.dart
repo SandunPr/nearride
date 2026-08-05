@@ -407,6 +407,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       label: const Text('Manage provider listings'),
                     ),
                     const SizedBox(height: 20),
+                    const Divider(),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.shield_outlined),
+                      title: const Text('Privacy Policy'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/privacy'),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.description_outlined),
+                      title: const Text('Terms & Conditions'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/terms'),
+                    ),
+                    const SizedBox(height: 20),
                     TextButton.icon(
                       onPressed: saving ? null : logout,
                       icon: const Icon(Icons.logout),

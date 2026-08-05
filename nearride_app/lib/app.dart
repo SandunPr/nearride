@@ -10,11 +10,24 @@ import 'features/auth/presentation/register_screen.dart';
 import 'features/favourites/presentation/favourites_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/listings/presentation/listing_details_screen.dart';
+import 'features/legal/presentation/legal_screen.dart';
+import 'features/onboarding/presentation/launch_screen.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'features/provider/presentation/provider_screen.dart';
 import 'features/profile/presentation/profile_screen.dart';
 import 'features/search/presentation/search_screen.dart';
 
-final router = GoRouter(initialLocation: '/', routes: [
+final router = GoRouter(initialLocation: '/launch', routes: [
+  GoRoute(path: '/launch', builder: (_, __) => const LaunchScreen()),
+  GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+  GoRoute(
+    path: '/privacy',
+    builder: (_, __) => const LegalScreen(document: LegalDocument.privacy),
+  ),
+  GoRoute(
+    path: '/terms',
+    builder: (_, __) => const LegalScreen(document: LegalDocument.terms),
+  ),
   GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
   GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
   GoRoute(

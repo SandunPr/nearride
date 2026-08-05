@@ -283,6 +283,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: loading ? null : () => context.pop(),
                   child: const Text('Already have an account? Sign in'),
                 ),
+                const SizedBox(height: 8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text('By creating an account, you accept our '),
+                    TextButton(
+                      onPressed: () => context.push('/terms'),
+                      child: const Text('Terms'),
+                    ),
+                    const Text('and'),
+                    TextButton(
+                      onPressed: () => context.push('/privacy'),
+                      child: const Text('Privacy Policy'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
