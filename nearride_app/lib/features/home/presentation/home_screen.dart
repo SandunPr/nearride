@@ -181,12 +181,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: Icon(Icons.person_outline), label: 'Account'),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: load,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-            children: [
-              Card(
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
@@ -272,8 +271,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              if (message != null)
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: load,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                  children: [
+                    if (message != null)
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   padding: const EdgeInsets.all(12),
@@ -282,7 +289,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(12)),
                   child: Text(message!),
                 ),
-              Row(children: [
+                    Row(children: [
                 Text('Nearby listings',
                     style: Theme.of(context)
                         .textTheme
@@ -291,23 +298,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const Spacer(),
                 TextButton(onPressed: load, child: const Text('Refresh')),
               ]),
-              if (loading)
+                    if (loading)
                 ...List.generate(
                     3,
                     (_) => const Padding(
                         padding: EdgeInsets.only(bottom: 12),
                         child: LinearProgressIndicator()))
-              else if (items.isEmpty)
+                    else if (items.isEmpty)
                 const Padding(
                     padding: EdgeInsets.all(32),
                     child: Center(
                         child: Text('No active listings found in this area.')))
-              else
+                    else
                 ...items.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: ListingCard(listing: item))),
-            ],
-          ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       );
 }
