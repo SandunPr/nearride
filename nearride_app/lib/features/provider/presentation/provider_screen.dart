@@ -158,6 +158,11 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
   bool get hasDriver => type != 'vehicle_without_driver';
   bool get hasVehicle => type != 'driver_only';
 
+  String titleCase(String value) => value.trim().replaceAllMapped(
+        RegExp(r"(^|[\s\-/])([a-zA-Z])"),
+        (match) => '${match.group(1)}${match.group(2)!.toUpperCase()}',
+      );
+
   String messageFor(Object exception) {
     if (exception is DioException) {
       final data = exception.response?.data;
@@ -245,13 +250,13 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
         data: {
           'listingType': type,
           'categoryId': categoryId,
-          'title': title.text.trim(),
+          'title': titleCase(title.text),
           'description':
-              description.text.trim().isEmpty ? null : description.text.trim(),
+              description.text.trim().isEmpty ? null : titleCase(description.text),
           'manufacturer': manufacturer.text.trim().isEmpty
               ? null
-              : manufacturer.text.trim(),
-          'model': model.text.trim().isEmpty ? null : model.text.trim(),
+              : titleCase(manufacturer.text),
+          'model': model.text.trim().isEmpty ? null : titleCase(model.text),
           'registrationNumber':
               hasVehicle ? vehicleNumber.text.trim().toUpperCase() : null,
           'driverLicenseNumber':
@@ -265,7 +270,8 @@ class _ProviderScreenState extends ConsumerState<ProviderScreen> {
           'longDistanceAvailable': longDistanceAvailable,
           'latitude': lat!,
           'longitude': lng!,
-          'publicAreaName': area.text.trim().isEmpty ? null : area.text.trim(),
+          'publicAreaName':
+              area.text.trim().isEmpty ? null : titleCase(area.text),
         },
       );
 

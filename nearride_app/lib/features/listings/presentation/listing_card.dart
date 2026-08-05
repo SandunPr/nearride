@@ -79,7 +79,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
                   width: 108,
-                  height: 112,
+                  height: 162,
                   child: listing.thumbnailUrl == null
                       ? Container(
                           color: Colors.grey.shade200,
@@ -127,70 +127,109 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 3),
                     Text(
-                      '${listing.typeLabel} • ${listing.distanceLabel}',
+                      [listing.vehicleLabel, listing.typeLabel]
+                          .whereType<String>()
+                          .join(' • '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_outlined, size: 15),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            [listing.publicAreaName, listing.distanceLabel]
+                                .whereType<String>()
+                                .join(' • '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: [
+                        if (listing.passengerCapacity != null)
+                          _DetailPill(
+                            icon: Icons.airline_seat_recline_normal,
+                            label: '${listing.passengerCapacity} Seats',
+                          ),
+                        if (listing.hasAirConditioning)
+                          const _DetailPill(icon: Icons.ac_unit, label: 'A/C'),
+                        if (listing.longDistanceAvailable)
+                          const _DetailPill(
+                            icon: Icons.route_outlined,
+                            label: 'Long Distance',
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
+                          radius: 14,
                           backgroundImage: listing.providerAvatarUrl == null
                               ? null
                               : CachedNetworkImageProvider(
                                   listing.providerAvatarUrl!,
                                 ),
                           child: listing.providerAvatarUrl == null
-                              ? Text(
-                                  listing.providerName.isEmpty
-                                      ? '?'
-                                      : listing.providerName.characters.first
-                                          .toUpperCase(),
-                                )
+                              ? Text(listing.providerName.isEmpty
+                                  ? '?'
+                                  : listing.providerName.characters.first
+                                      .toUpperCase())
                               : null,
                         ),
-                        const SizedBox(width: 7),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             listing.providerName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
                         if (listing.providerVerified)
                           Icon(
                             Icons.verified,
-                            size: 17,
+                            size: 16,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                       ],
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           listing.availableNow
                               ? Icons.check_circle
                               : Icons.schedule,
-                          size: 16,
-                          color: listing.availableNow
-                              ? Colors.green
-                              : Colors.orange,
+                          size: 15,
+                          color:
+                              listing.availableNow ? Colors.green : Colors.orange,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          listing.availableNow
-                              ? 'Available'
-                              : 'Ask availability',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          listing.availableNow ? 'Available Now' : 'Ask Availability',
+                          style: Theme.of(context).textTheme.labelSmall,
                         ),
+                        const Spacer(),
+                        if (listing.priceLabel != null)
+                          Text(
+                            listing.priceLabel!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
                       ],
                     ),
                   ],
@@ -202,4 +241,28 @@ class _ListingCardState extends ConsumerState<ListingCard> {
       ),
     );
   }
+}
+
+class _DetailPill extends StatelessWidget {
+  const _DetailPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12),
+            const SizedBox(width: 3),
+            Text(label, style: Theme.of(context).textTheme.labelSmall),
+          ],
+        ),
+      );
 }
