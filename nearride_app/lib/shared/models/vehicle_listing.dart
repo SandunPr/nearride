@@ -51,6 +51,19 @@ class VehicleListing {
   final double? distanceKm;
   final List<String> images;
 
+  static double? _doubleValue(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '');
+  }
+
+  static int? _intValue(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  static bool _boolValue(dynamic value) =>
+      value == true || value == 1 || value == '1' || value == 'true';
+
   factory VehicleListing.fromJson(Map<String, dynamic> json) {
     final imageItems = json['images'] as List? ?? const [];
     final images = imageItems
@@ -68,28 +81,25 @@ class VehicleListing {
       listingType: json['listingType'] ?? '',
       providerName: json['providerName'] ?? 'Independent provider',
       providerAvatarUrl: json['providerAvatarUrl'],
-      providerVerified:
-          json['providerVerified'] == true || json['providerVerified'] == 1,
-      availableNow: json['availableNow'] == true || json['availableNow'] == 1,
+      providerVerified: _boolValue(json['providerVerified']),
+      availableNow: _boolValue(json['availableNow']),
       phone: json['phone'] ?? '',
       categoryName: json['categoryName'],
       description: json['description'],
       manufacturer: json['manufacturer'],
       model: json['model'],
-      passengerCapacity: (json['passengerCapacity'] as num?)?.toInt(),
-      loadCapacityKg: (json['loadCapacityKg'] as num?)?.toDouble(),
+      passengerCapacity: _intValue(json['passengerCapacity']),
+      loadCapacityKg: _doubleValue(json['loadCapacityKg']),
       publicAreaName: json['publicAreaName'],
-      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
+      distanceKm: _doubleValue(json['distanceKm']),
       whatsappNumber: json['whatsappNumber'],
       thumbnailUrl:
           json['thumbnailUrl'] ?? (images.isEmpty ? null : images.first),
       registrationNumber:
           json['registrationNumberMasked'] ?? json['registrationNumber'],
-      hasAirConditioning: json['hasAirConditioning'] == true ||
-          json['hasAirConditioning'] == 1,
-      longDistanceAvailable: json['longDistanceAvailable'] == true ||
-          json['longDistanceAvailable'] == 1,
-      startingPrice: (json['startingPrice'] as num?)?.toDouble(),
+      hasAirConditioning: _boolValue(json['hasAirConditioning']),
+      longDistanceAvailable: _boolValue(json['longDistanceAvailable']),
+      startingPrice: _doubleValue(json['startingPrice']),
       priceUnit: json['priceUnit'],
       images: images,
     );
