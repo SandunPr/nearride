@@ -71,15 +71,15 @@ class _ListingCardState extends ConsumerState<ListingCard> {
       child: InkWell(
         onTap: () => context.push('/listing/${listing.publicId}'),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(7),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
-                  width: 92,
-                  height: 118,
+                  width: 82,
+                  height: 102,
                   child: listing.thumbnailUrl == null
                       ? Container(
                           color: Colors.grey.shade200,
@@ -93,7 +93,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 9),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,8 +114,8 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                         IconButton(
                           constraints: const BoxConstraints.tightFor(
-                            width: 34,
-                            height: 34,
+                            width: 30,
+                            height: 30,
                           ),
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
@@ -140,7 +140,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Row(
                       children: [
                         const Icon(Icons.location_on_outlined, size: 15),
@@ -157,7 +157,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Row(
                       children: [
                         const Icon(Icons.person_outline, size: 14),
@@ -178,7 +178,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         Icon(

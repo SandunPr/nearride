@@ -12,6 +12,7 @@ class VehicleListing {
     this.description,
     this.manufacturer,
     this.model,
+    this.manufacturedYear,
     this.passengerCapacity,
     this.loadCapacityKg,
     this.publicAreaName,
@@ -21,6 +22,7 @@ class VehicleListing {
     this.registrationNumber,
     this.hasAirConditioning = false,
     this.longDistanceAvailable = false,
+    this.emergencyContactAvailable = false,
     this.startingPrice,
     this.priceUnit,
     this.images = const [],
@@ -36,6 +38,7 @@ class VehicleListing {
   final String? description;
   final String? manufacturer;
   final String? model;
+  final int? manufacturedYear;
   final String? publicAreaName;
   final String? whatsappNumber;
   final String? thumbnailUrl;
@@ -44,6 +47,7 @@ class VehicleListing {
   final bool availableNow;
   final bool hasAirConditioning;
   final bool longDistanceAvailable;
+  final bool emergencyContactAvailable;
   final int? passengerCapacity;
   final double? loadCapacityKg;
   final double? startingPrice;
@@ -88,6 +92,7 @@ class VehicleListing {
       description: json['description'],
       manufacturer: json['manufacturer'],
       model: json['model'],
+      manufacturedYear: _intValue(json['manufacturedYear']),
       passengerCapacity: _intValue(json['passengerCapacity']),
       loadCapacityKg: _doubleValue(json['loadCapacityKg']),
       publicAreaName: json['publicAreaName'],
@@ -99,6 +104,8 @@ class VehicleListing {
           json['registrationNumberMasked'] ?? json['registrationNumber'],
       hasAirConditioning: _boolValue(json['hasAirConditioning']),
       longDistanceAvailable: _boolValue(json['longDistanceAvailable']),
+      emergencyContactAvailable:
+          _boolValue(json['emergencyContactAvailable']),
       startingPrice: _doubleValue(json['startingPrice']),
       priceUnit: json['priceUnit'],
       images: images,

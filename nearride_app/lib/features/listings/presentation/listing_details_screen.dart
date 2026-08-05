@@ -32,6 +32,50 @@ class ListingDetailsScreen extends ConsumerWidget {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  Widget infoRow(BuildContext context, IconData icon, String label, String value) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(children: [
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 9),
+          SizedBox(
+            width: 92,
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ]),
+      );
+
+  Widget section(BuildContext context,
+          {required String title,
+          required IconData icon,
+          required List<Widget> children}) =>
+      Card(
+        margin: const EdgeInsets.only(top: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(icon, size: 20),
+                const SizedBox(width: 8),
+                Text(title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+              ]),
+              const Divider(height: 18),
+              ...children,
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
         appBar: AppBar(title: const Text('Listing details')),
@@ -120,7 +164,77 @@ class ListingDetailsScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Text(listing.description ??
                   'Contact the provider to confirm vehicle details, pricing, pickup, timing, licensing and availability.'),
-              const SizedBox(height: 20),
+              section(
+                context,
+                title: 'Vehicle Details',
+                icon: Icons.directions_car_outlined,
+                children: [
+                  if (listing.vehicleLabel != null)
+                    infoRow(context, Icons.badge_outlined, 'Vehicle',
+                        listing.vehicleLabel!),
+                  if (listing.categoryName != null)
+                    infoRow(context, Icons.category_outlined, 'Category',
+                        listing.categoryName!),
+                  if (listing.manufacturedYear != null)
+                    infoRow(context, Icons.calendar_today_outlined, 'Year',
+                        '${listing.manufacturedYear}'),
+                  if (listing.registrationNumber != null)
+                    infoRow(context, Icons.pin_outlined, 'Registration',
+                        listing.registrationNumber!),
+                  if (listing.passengerCapacity != null)
+                    infoRow(context, Icons.airline_seat_recline_normal,
+                        'Capacity', '${listing.passengerCapacity} Seats'),
+                  if (listing.loadCapacityKg != null)
+                    infoRow(context, Icons.scale_outlined, 'Load Capacity',
+                        '${listing.loadCapacityKg!.toStringAsFixed(0)} kg'),
+                  infoRow(context, Icons.ac_unit, 'Air Conditioning',
+                      listing.hasAirConditioning ? 'Available' : 'Not Listed'),
+                ],
+              ),
+              section(
+                context,
+                title: 'Driver & Service',
+                icon: Icons.person_outline,
+                children: [
+                  infoRow(context, Icons.person_outline, 'Provider',
+                      listing.providerName),
+                  infoRow(
+                    context,
+                    Icons.verified_user_outlined,
+                    'Verification',
+                    listing.providerVerified ? 'Verified Provider' : 'Not Verified',
+                  ),
+                  infoRow(context, Icons.work_outline, 'Service Type',
+                      listing.typeLabel),
+                  infoRow(
+                    context,
+                    Icons.check_circle_outline,
+                    'Availability',
+                    listing.availableNow ? 'Available Now' : 'Currently Busy',
+                  ),
+                  infoRow(context, Icons.route_outlined, 'Long Distance',
+                      listing.longDistanceAvailable ? 'Available' : 'Not Listed'),
+                  if (listing.emergencyContactAvailable)
+                    infoRow(context, Icons.emergency_outlined, 'Emergency',
+                        'Contact Available'),
+                ],
+              ),
+              section(
+                context,
+                title: 'Location & Pricing',
+                icon: Icons.payments_outlined,
+                children: [
+                  if (listing.publicAreaName != null)
+                    infoRow(context, Icons.location_on_outlined, 'Area',
+                        listing.publicAreaName!),
+                  infoRow(context, Icons.near_me_outlined, 'Distance',
+                      listing.distanceLabel),
+                  if (listing.priceLabel != null)
+                    infoRow(context, Icons.payments_outlined, 'Starting Price',
+                        listing.priceLabel!),
+                ],
+              ),
+              const SizedBox(height: 12),
               Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
