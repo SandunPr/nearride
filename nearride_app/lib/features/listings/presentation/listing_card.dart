@@ -78,8 +78,8 @@ class _ListingCardState extends ConsumerState<ListingCard> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
-                  width: 108,
-                  height: 162,
+                  width: 92,
+                  height: 118,
                   child: listing.thumbnailUrl == null
                       ? Container(
                           color: Colors.grey.shade200,
@@ -104,7 +104,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         Expanded(
                           child: Text(
                             listing.title,
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context)
                                 .textTheme
@@ -113,6 +113,11 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                           ),
                         ),
                         IconButton(
+                          constraints: const BoxConstraints.tightFor(
+                            width: 34,
+                            height: 34,
+                          ),
+                          padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                           tooltip: saved
                               ? 'Remove from favourites'
@@ -152,43 +157,11 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 5,
-                      runSpacing: 4,
-                      children: [
-                        if (listing.passengerCapacity != null)
-                          _DetailPill(
-                            icon: Icons.airline_seat_recline_normal,
-                            label: '${listing.passengerCapacity} Seats',
-                          ),
-                        if (listing.hasAirConditioning)
-                          const _DetailPill(icon: Icons.ac_unit, label: 'A/C'),
-                        if (listing.longDistanceAvailable)
-                          const _DetailPill(
-                            icon: Icons.route_outlined,
-                            label: 'Long Distance',
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 5),
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundImage: listing.providerAvatarUrl == null
-                              ? null
-                              : CachedNetworkImageProvider(
-                                  listing.providerAvatarUrl!,
-                                ),
-                          child: listing.providerAvatarUrl == null
-                              ? Text(listing.providerName.isEmpty
-                                  ? '?'
-                                  : listing.providerName.characters.first
-                                      .toUpperCase())
-                              : null,
-                        ),
-                        const SizedBox(width: 6),
+                        const Icon(Icons.person_outline, size: 14),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             listing.providerName,
@@ -205,7 +178,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(
@@ -218,7 +191,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          listing.availableNow ? 'Available Now' : 'Ask Availability',
+                          listing.availableNow ? 'Available' : 'Ask Availability',
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                         const Spacer(),
@@ -241,28 +214,4 @@ class _ListingCardState extends ConsumerState<ListingCard> {
       ),
     );
   }
-}
-
-class _DetailPill extends StatelessWidget {
-  const _DetailPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(7),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12),
-            const SizedBox(width: 3),
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
-          ],
-        ),
-      );
 }
